@@ -1,5 +1,7 @@
 # Tạo và kiểm thử iFlow qua MCP
 
+Xem [chi tiết lỗi cũ, thay đổi code và kết quả kiểm thử](CHANGES-SAFE-IFLOWS.md) để đối chiếu bản này với repo gốc.
+
 Bản mở rộng cho `1nbuc/mcp-integration-suite`, tập trung vào tạo/sửa iFlow có sơ đồ hoàn chỉnh, kiểm tra trước deploy và xác minh kết quả. Không thể bảo đảm mọi Groovy, mapping hoặc hệ thống đích bất kỳ đều không lỗi. Server chặn những lỗi đã biết, gọi SAP validation và phân biệt rõ kết quả đã xác minh với chưa xác minh.
 
 ## Chạy server
