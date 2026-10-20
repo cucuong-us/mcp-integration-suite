@@ -1,4 +1,7 @@
 import Zod, { z } from "zod";
+import {randomUUID} from "node:crypto";
+import {compileBlueprint} from "../iflow/blueprint";
+import {validateOnSAP} from "../iflow/safeDesign";
 import {
 	messageFilterSchema,
 	sendRequestSchema,
@@ -160,7 +163,7 @@ export const getMessages = async (
 
 				for (const attachement of message.attachments) {
 					message.messageAttachementFiles?.push({
-						description: attachement.name as string,
+						description: (attachement as any).Name as string,
 						// TS ignore because SAP specification is not what they actually provide
 
 						data: await getMessageMedia(
@@ -192,7 +195,7 @@ export const getMessages = async (
 							.getByKey(message.messageGuid)
 							.appendPath("/ErrorInformation")
 							.executeRaw(await getCurrentDestination())
-					).data.d.results;
+					).data.d;
 					message.ErrorInformationValue = (
 						await messageProcessingLogsApi
 							.requestBuilder()
@@ -245,28 +248,15 @@ export const getMessageMedia = async (mediaId: string): Promise<string> => {
 };
 
 export const createMappingTestIflow = async (pkgId: string) => {
-	try {
-		await integrationDesigntimeArtifactsApi
-			.requestBuilder()
-			.delete("if_echo_mapping", "active")
-			.execute(await getCurrentDestination());
-	} catch (error) { }
-
-	const iflowBuffer = await folderToZipBuffer(
-		path.resolve(projPath, "resources", "helpers", "if_echo_mapping")
-	);
-
-	const newIflow = integrationDesigntimeArtifactsApi
-		.entityBuilder()
-		.fromJson({
-			id: "if_echo_mapping",
-			name: "if_echo_mapping",
-			packageId: pkgId,
-			artifactContent: iflowBuffer.toString("base64"),
-		});
-
-	await integrationDesigntimeArtifactsApi
-		.requestBuilder()
-		.create(newIflow)
-		.execute(await getCurrentDestination());
+ const id='McpMappingTest'+randomUUID().replace(/-/g,'');
+ const compiled=compileBlueprint({id,name:id,endpoint:'/mcp/testmapping/'+id,nodes:[
+  {id:'Start',name:'Start',type:'start'},
+  {id:'Map',name:'Placeholder Mapping',type:'messageMapping'},
+  {id:'End',name:'End',type:'end'}
+ ],edges:[{id:'F1',source:'Start',target:'Map'},{id:'F2',source:'Map',target:'End'}]});
+ const entity=integrationDesigntimeArtifactsApi.entityBuilder().fromJson({id,name:id,packageId:pkgId,artifactContent:compiled.buffer.toString('base64')});
+ await integrationDesigntimeArtifactsApi.requestBuilder().create(entity).execute(await getCurrentDestination());
+ const sap=await validateOnSAP(id);
+ if(sap.status!=='passed')throw new Error('Created '+id+' but SAP validation did not pass: '+JSON.stringify(sap));
+ return {id,endpoint:compiled.endpoint,sap,editorVerified:false};
 };

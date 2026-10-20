@@ -16,6 +16,7 @@ import {
 import { logInfo } from "../..";
 import { parseFolder, patchFile } from "../../utils/fileBasedUtils";
 import { getEndpointUrl } from "../../utils/getEndpointUrl";
+import { updateDesignSafely, inspectDesign } from './safeDesign';
 const {
 	integrationDesigntimeArtifactsApi,
 	serviceEndpointsApi,
@@ -78,38 +79,14 @@ export const updateIflow = async (
 	iflowUpdate: { status: number; text: string };
 	deployStatus?: string;
 }> => {
-	const iflowPath = await getIflowFolder(id);
-
-	for (const file of iflowFiles) {
-		await patchFile(
-			iflowPath,
-			file.filepath,
-			file.content,
-			file.appendMode
-		);
-	}
-
-	const iflowBuffer = await folderToZipBuffer(iflowPath);
-
-	const newIflowEntity = integrationDesigntimeArtifactsApi
-		.entityBuilder()
-		.fromJson({
-			version: "active",
-			id,
-			artifactContent: iflowBuffer.toString("base64"),
-		});
-
-	await integrationDesigntimeArtifactsApi
-		.requestBuilder()
-		.update(newIflowEntity)
-		.replaceWholeEntityWithPut()
-		.execute(await getCurrentDestination());
+	const validation = await updateDesignSafely(id, iflowFiles);
 
 	return {
 		iflowUpdate: {
-			status: 200,
+			status: validation.status,
 			text: "successfully updated",
 		},
+		...{ validation },
 	};
 };
 
@@ -155,7 +132,8 @@ export const getIflowContentString = async (id: string): Promise<string> => {
  * @returns serviceEndpoints instances
  */
 export const getEndpoints = async (id?: string) => {
-	let endpointRequest = serviceEndpointsApi.requestBuilder().getAll();
+	let endpointRequest = serviceEndpointsApi.requestBuilder().getAll()
+		.select(serviceEndpointsApi.schema.ALL_FIELDS, serviceEndpointsApi.schema.ENTRY_POINTS);
 
 	if (id) {
 		endpointRequest = endpointRequest.filter(
@@ -185,6 +163,8 @@ export const getEndpoints = async (id?: string) => {
  * @returns Deployment Task ID
  */
 export const deployIflow = async (id: string): Promise<string> => {
+	const validation = await inspectDesign(id);
+	if (!validation.readyForDeployment) throw new Error('Deployment blocked by design validation: ' + JSON.stringify(validation));
 	const deployRes = await deployIntegrationDesigntimeArtifact({
 		id,
 		version: "active",

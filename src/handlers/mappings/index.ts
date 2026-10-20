@@ -66,7 +66,7 @@ export const registerMappingsHandler = (server: McpServerWithMiddleware) => {
     src/main/resources/ is the root
     src/main/resources/mapping contains message mappings in format <mappingname>.mmap with xml structure
     src/main/resources/xsd contains all xsd file in format <filename>.xsd
-    src/main/resources/scripts contains groovy and javascript scripts that can be used within message mapping
+    src/main/resources/script contains groovy and javascript scripts that can be used within message mapping
     src/main/resources/mapping/<message mapping id>.mmap contains the mapping in xml structure
             `,
 		{
@@ -202,9 +202,9 @@ export const registerMappingsHandler = (server: McpServerWithMiddleware) => {
 
 	server.registerToolIntegrationSuite(
 		"create-mapping-testiflow",
-		`Creates an iflow called if_echo_mapping
+		`Creates a NEW mapping test iFlow with a unique ID, preserving existing artifacts.
 This iflow can be used to test mappings, it returns the content after mapping.
-Allways run this tool before using the test iflow because it resets old content of the iflow.
+Use the returned ID and endpoint. Existing if_echo_mapping is never deleted or reset.
 To test a mapping use the usual update procedure but replace the current mapping and datatypes with yours
 The endpoint can also be found using the regular endpoint finding procedure`,
 		{
@@ -214,14 +214,15 @@ The endpoint can also be found using the regular endpoint finding procedure`,
 		},
 		async ({ pkgId }) => {
 			try {
-				await createMappingTestIflow(pkgId);
+				const created = await createMappingTestIflow(pkgId);
 				return {
 					content: [
 						{
 							type: "text",
 							text: JSON.stringify({
 								status: "SUCCESS",
-								message: `iflow if_echo_mapping created.
+                                artifact: created,
+								message: `iflow ${created.id} created.
 							You can now go on by applying your message mapping to the iflow.
 							To send a test message use the get get-iflow-endpoints tool and then the send-http-message to send test messages
 							Don't forget to deploy tho`,

@@ -9,6 +9,7 @@ import { logError, logInfo } from "..";
 import { registerMappingsHandler } from "./mappings";
 import { registerMappingsExampleHandler } from "./mappings/examples";
 import { registerDocsHandlers } from "./docs";
+import { registerDesignHandlers } from './iflow/design';
 
 const registerDefaultMiddleware = (server: McpServerWithMiddleware) => {
 	server.use(async(next, name, params) => {
@@ -26,6 +27,7 @@ export const registerAllHandlers = (server: McpServerWithMiddleware) => {
 	registerDefaultMiddleware(server);
 	registerPackageHandlers(server);
 	registerIflowHandlers(server);
+	registerDesignHandlers(server);
 	registerPackageDiscoverHandler(server);
 	registerIflowExampleHandler(server);
 	registerMessageHandlers(server);

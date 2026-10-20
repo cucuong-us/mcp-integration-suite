@@ -5,7 +5,7 @@ import path from "path";
 export const registerDeleteTempOnExit = () => {
 
     const deleteTemp = () => {
-        rimrafSync(path.join(projPath, 'temp'))
+        rimrafSync(path.join(projPath, 'temp', String(process.pid)))
     }
 
     process.on("exit", (code) => {
@@ -17,6 +17,7 @@ export const registerDeleteTempOnExit = () => {
     process.on("SIGTERM", (signal) => {
         logInfo(`Process ${process.pid} received a SIGTERM signal`);
         deleteTemp()
+        process.exit(0);
     });
 
     // catch ctrl-c, so that event 'exit' always works

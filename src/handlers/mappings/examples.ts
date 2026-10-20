@@ -13,7 +13,7 @@ It can also include datatypes, scripts and other dependencies
 src/main/resources/ is the root
 src/main/resources/mapping contains message mappings in format <mappingname>.mmap with xml structure
 src/main/resources/xsd contains all xsd file in format <filename>.xsd
-src/main/resources/scripts contains groovy and javascript scripts that can be used within iflow
+src/main/resources/script contains groovy and javascript scripts that can be used within iflow
 src/main/resources/scenarioflows/mapping/<mapping id>.mmap contains the mapping in xml structure`,
 		{},
 		async () => {

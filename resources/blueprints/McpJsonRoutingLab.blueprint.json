@@ -1,0 +1,140 @@
+{
+  "id": "McpJsonRoutingLab",
+  "name": "MCP JSON Routing and Exception Lab",
+  "endpoint": "/mcp/safety/json-routing",
+  "csrfProtected": true,
+  "nodes": [
+    {
+      "id": "S",
+      "name": "Receive JSON",
+      "type": "start"
+    },
+    {
+      "id": "Parse",
+      "name": "Parse and Classify",
+      "type": "groovy",
+      "properties": {
+        "script": "parse.groovy"
+      }
+    },
+    {
+      "id": "Route",
+      "name": "Route by Amount",
+      "type": "router"
+    },
+    {
+      "id": "High",
+      "name": "High Response",
+      "type": "contentModifier",
+      "x": 700,
+      "y": 140,
+      "properties": {
+        "bodyType": "constant",
+        "wrapContent": "{\"route\":\"high\"}"
+      }
+    },
+    {
+      "id": "HighEnd",
+      "name": "High End",
+      "type": "end",
+      "x": 900,
+      "y": 155
+    },
+    {
+      "id": "Regular",
+      "name": "Regular Response",
+      "type": "contentModifier",
+      "x": 700,
+      "y": 290,
+      "properties": {
+        "bodyType": "constant",
+        "wrapContent": "{\"route\":\"regular\"}"
+      }
+    },
+    {
+      "id": "RegularEnd",
+      "name": "Regular End",
+      "type": "end",
+      "x": 900,
+      "y": 305
+    },
+    {
+      "id": "Invalid",
+      "name": "Invalid Response",
+      "type": "contentModifier",
+      "x": 700,
+      "y": 440,
+      "properties": {
+        "bodyType": "constant",
+        "wrapContent": "{\"route\":\"invalid\"}"
+      }
+    },
+    {
+      "id": "InvalidEnd",
+      "name": "Invalid End",
+      "type": "end",
+      "x": 900,
+      "y": 455
+    }
+  ],
+  "edges": [
+    {
+      "id": "F1",
+      "source": "S",
+      "target": "Parse"
+    },
+    {
+      "id": "F2",
+      "source": "Parse",
+      "target": "Route"
+    },
+    {
+      "id": "R0",
+      "source": "Route",
+      "target": "High",
+      "condition": "${property.route} = 'high'",
+      "expressionType": "NonXML"
+    },
+    {
+      "id": "E0",
+      "source": "High",
+      "target": "HighEnd"
+    },
+    {
+      "id": "R1",
+      "source": "Route",
+      "target": "Regular",
+      "condition": "${property.route} = 'regular'",
+      "expressionType": "NonXML"
+    },
+    {
+      "id": "E1",
+      "source": "Regular",
+      "target": "RegularEnd"
+    },
+    {
+      "id": "R2",
+      "source": "Route",
+      "target": "Invalid",
+      "default": true
+    },
+    {
+      "id": "E2",
+      "source": "Invalid",
+      "target": "InvalidEnd"
+    }
+  ],
+  "exceptionHandler": {
+    "script": "handler.groovy"
+  },
+  "resources": [
+    {
+      "path": "src/main/resources/script/parse.groovy",
+      "content": "import com.sap.gateway.ip.core.customdev.util.Message\nimport groovy.json.JsonSlurper\nimport groovy.json.JsonOutput\nMessage processData(Message message) {\ndef input = new JsonSlurper().parseText(message.getBody(String))\nif(input.forceError) throw new IllegalArgumentException('Synthetic test')\ndef amount = input.amount == null ? -1 : input.amount.toBigDecimal()\nmessage.setProperty('route',amount < 0 ? 'invalid' : amount >= 1000 ? 'high' : 'regular')\nreturn message\n}"
+    },
+    {
+      "path": "src/main/resources/script/handler.groovy",
+      "content": "import com.sap.gateway.ip.core.customdev.util.Message\nimport groovy.json.JsonSlurper\nimport groovy.json.JsonOutput\nMessage processData(Message message) {\nmessage.setHeader('Content-Type','application/json')\nmessage.setHeader('CamelHttpResponseCode',500)\nmessage.setBody(JsonOutput.toJson([status:'handled-error',reason:'Synthetic exception handled']))\nreturn message\n}"
+    }
+  ]
+}

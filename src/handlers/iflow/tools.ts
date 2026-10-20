@@ -115,7 +115,7 @@ Folder structure is like this:
 src/main/resources/ is the root
 src/main/resources/mapping contains message mappings in format <mappingname>.mmap with xml structure
 src/main/resources/xsd contains all xsd file in format <filename>.xsd
-src/main/resources/scripts contains groovy and javascript scripts that can be used within iflow
+src/main/resources/script contains groovy and javascript scripts that can be used within iflow
 src/main/resources/scenarioflows/integrationflow/<iflow id>.iflw contains the iflow in xml structure
         `,
 		{
@@ -165,26 +165,9 @@ src/main/resources/scenarioflows/integrationflow/<iflow id>.iflw contains the if
 			}
 		}
 	);
-	// Shit SAP API
 	server.registerToolIntegrationSuite(
 		"get-iflow-endpoints",
-		`
-Get endpoint(s) of iflow and its URLs and Protocols
-Isn't very reliable unfourtunately.
-If you receive <host>/http/endpointlink the endpoint could also be <host>/http/endpoint/link
-
-The URI path will allways be prefixed with protocol
-
-If you use the error and it gives you 404 try getting the iflow and parsing the actual endpint
-But keep in mind that the path in the iflow is missing a prefix
-These are the prefixes based on protocol. So if you get /some/endpoint from get-iflow actual path is /http/some/endpoint for REST
-    "REST": '/http/',
-    
-    "AS2": '/as2/as2/'
-    
-    "SOAP": '/cfx/soapapi/'
-    
-		`,
+		'Get SAP-provided runtime URLs and protocols for an iFlow ID. Reads expanded EntryPoints. Runtime host may differ from the management API host. Does not guess paths from opaque service IDs.',
 		{
 			iflowId: z
 				.string()
@@ -240,7 +223,7 @@ These are the prefixes based on protocol. So if you get /some/endpoint from get-
 		"get-deploy-error",
 		`
 If you tried to deploy an Artifact like Iflow or mapping and got an error use this too to get the error message and context
-If the response is empty it means there is no deployment error and it was successful
+An empty response does not confirm deployment success or runtime readiness. Check deployment and runtime status separately.
 
 If you have errors consider checking the available examples to resolve them
 `,

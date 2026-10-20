@@ -1,0 +1,112 @@
+[
+  {
+    "name": "Order mapping and JSON conversion",
+    "testCase": {
+      "id": "McpOrderValidation10",
+      "contentType": "application/xml",
+      "body": "<Order><OrderID>MCP-001</OrderID><Customer><Name>Test Customer</Name><Email>test@example.invalid</Email><Address>Synthetic Address</Address></Customer><OrderDate>2026-10-19</OrderDate><Items><Item><ProductID>P-1</ProductID><Name>Widget</Name><Quantity>2</Quantity><Price>10.00</Price></Item></Items><TotalAmount>20.00</TotalAmount></Order>",
+      "expectedJson": {
+        "status": "accepted",
+        "order": {
+          "OrderID": "MCP-001"
+        }
+      }
+    }
+  },
+  {
+    "name": "Order missing identifier",
+    "testCase": {
+      "id": "McpOrderValidation10",
+      "contentType": "application/xml",
+      "body": "<Order><OrderID/><Customer><Name>Test Customer</Name><Email>test@example.invalid</Email><Address>Synthetic Address</Address></Customer><OrderDate>2026-10-19</OrderDate><Items><Item><ProductID>P-1</ProductID><Name>Widget</Name><Quantity>2</Quantity><Price>10.00</Price></Item></Items><TotalAmount>20.00</TotalAmount></Order>",
+      "expectedStatus": 400,
+      "expectedJson": {
+        "status": "rejected"
+      }
+    }
+  },
+  {
+    "name": "Malformed order XML",
+    "testCase": {
+      "id": "McpOrderValidation10",
+      "contentType": "application/xml",
+      "body": "<Order>",
+      "expectedStatus": 400,
+      "expectedJson": {
+        "status": "rejected"
+      }
+    }
+  },
+  {
+    "name": "High amount branch",
+    "testCase": {
+      "id": "McpJsonRoutingLab",
+      "body": "{\"amount\":1500}",
+      "expectedJson": {
+        "route": "high"
+      }
+    }
+  },
+  {
+    "name": "Regular amount branch",
+    "testCase": {
+      "id": "McpJsonRoutingLab",
+      "body": "{\"amount\":10}",
+      "expectedJson": {
+        "route": "regular"
+      }
+    }
+  },
+  {
+    "name": "Invalid amount default branch",
+    "testCase": {
+      "id": "McpJsonRoutingLab",
+      "body": "{\"amount\":-1}",
+      "expectedJson": {
+        "route": "invalid"
+      }
+    }
+  },
+  {
+    "name": "Malformed JSON exception handling",
+    "testCase": {
+      "id": "McpJsonRoutingLab",
+      "body": "{invalid",
+      "expectedStatus": 500,
+      "expectedJson": {
+        "status": "handled-error"
+      }
+    }
+  },
+  {
+    "name": "Explicit Groovy exception handling",
+    "testCase": {
+      "id": "McpJsonRoutingLab",
+      "body": "{\"forceError\":true}",
+      "expectedStatus": 500,
+      "expectedJson": {
+        "status": "handled-error"
+      }
+    }
+  },
+  {
+    "name": "HTTPS Request Reply",
+    "testCase": {
+      "id": "McpHttpReceiverLab",
+      "body": "{}",
+      "expectedJson": {
+        "status": "received",
+        "containsExample": true
+      }
+    }
+  },
+  {
+    "name": "Unicode and XML escaping",
+    "testCase": {
+      "id": "McpUnicodeBundleLab",
+      "contentType": "application/xml",
+      "body": "<input/>",
+      "expectedBodyContains": "Tiếng Việt &amp; &lt;XML&gt; — 日本語"
+    }
+  }
+]

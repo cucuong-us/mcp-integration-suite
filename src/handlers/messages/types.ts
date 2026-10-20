@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const sendRequestSchema = {
+    csrfProtected: z.boolean().default(true).describe('Fetch CSRF token/cookies before modifying requests. False only if the SAP sender is configured without CSRF.'),
     path: z.string().describe("HTTP Path to send the request to"),
     method: z
         .union([

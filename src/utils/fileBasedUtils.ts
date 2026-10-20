@@ -41,9 +41,13 @@ export const patchFile = async (
 	append: boolean
 ): Promise<void> => {
 	const filePath = path.join(basePath, relativePath);
+	const relative = path.relative(path.resolve(basePath), path.resolve(filePath));
+	if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) throw new Error('Unsafe artifact path');
+	await mkdir(path.dirname(filePath), { recursive: true });
 
 	if (append) {
 		await appendFile(filePath, content);
+		return;
 	}
 
 	await mkdir(path.dirname(filePath), { recursive: true });

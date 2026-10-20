@@ -1,0 +1,39 @@
+{
+  "id": "McpUnicodeBundleLab",
+  "name": "MCP Unicode Content - Long Artifact Name To Test OSGi Manifest Line Folding",
+  "endpoint": "/mcp/safety/unicode",
+  "csrfProtected": true,
+  "nodes": [
+    {
+      "id": "S",
+      "name": "Start",
+      "type": "start"
+    },
+    {
+      "id": "Body",
+      "name": "Unicode and XML escaping",
+      "type": "contentModifier",
+      "properties": {
+        "bodyType": "constant",
+        "wrapContent": "<response><text>Tiếng Việt &amp; &lt;XML&gt; — 日本語</text></response>"
+      }
+    },
+    {
+      "id": "E",
+      "name": "End",
+      "type": "end"
+    }
+  ],
+  "edges": [
+    {
+      "id": "F1",
+      "source": "S",
+      "target": "Body"
+    },
+    {
+      "id": "F2",
+      "source": "Body",
+      "target": "E"
+    }
+  ]
+}

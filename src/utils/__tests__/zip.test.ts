@@ -118,7 +118,7 @@ describe('ZIP Utility Functions', () => {
 
         // 4. Test the actual extractToFolder function (without deep content verification due to path issue)
         const actualExtractPath = await extractToFolder(zipBuffer, extractId);
-        expect(actualExtractPath).toContain(extractId); // Check if path includes the ID
+        await verifyTestDir(actualExtractPath, testStructure);
         // Check if the directory was created
         const stats = await fs.stat(actualExtractPath);
         expect(stats.isDirectory()).toBe(true);
@@ -126,7 +126,7 @@ describe('ZIP Utility Functions', () => {
         await rimraf(actualExtractPath);
     });
 
-     it('extractToFolder should overwrite existing folder', async () => {
+     it('extractToFolder keeps simultaneous downloads isolated', async () => {
         const zipBuffer = await folderToZipBuffer(sourceDir);
         const extractId = `test_overwrite_${Date.now()}`;
         const actualExtractPath = path.join(process.cwd(), 'temp', extractId); // Predict path based on implementation detail
@@ -135,14 +135,18 @@ describe('ZIP Utility Functions', () => {
         await fs.mkdir(actualExtractPath, { recursive: true });
         await fs.writeFile(path.join(actualExtractPath, 'dummy.txt'), 'delete me');
 
-        // Run extractToFolder - it should delete dummy.txt
-        await extractToFolder(zipBuffer, extractId);
+        const first = await extractToFolder(zipBuffer, extractId);
+        const second = await extractToFolder(zipBuffer, extractId);
+        expect(first).not.toBe(second);
 
         // Verify dummy file is gone and expected files exist
-        await expect(fs.access(path.join(actualExtractPath, 'dummy.txt'))).rejects.toThrow(); // Should not exist
-        await expect(fs.access(path.join(actualExtractPath, 'file1.txt'))).resolves.not.toThrow(); // Should exist
+        await expect(fs.access(path.join(actualExtractPath, 'dummy.txt'))).resolves.not.toThrow();
+        await verifyTestDir(first, testStructure);
+        await verifyTestDir(second, testStructure);
 
         // Clean up
         await rimraf(actualExtractPath);
+        await rimraf(first);
+        await rimraf(second);
     });
 });

@@ -1,0 +1,66 @@
+{
+  "id": "McpHttpReceiverLab",
+  "name": "MCP HTTPS Receiver and Exception Lab",
+  "endpoint": "/mcp/safety/http-receiver",
+  "csrfProtected": true,
+  "nodes": [
+    {
+      "id": "S",
+      "name": "Start",
+      "type": "start"
+    },
+    {
+      "id": "Call",
+      "name": "GET Public Example",
+      "type": "requestReply",
+      "receiver": {
+        "url": "https://example.com/",
+        "method": "GET",
+        "name": "PublicExample"
+      }
+    },
+    {
+      "id": "Reply",
+      "name": "Summarize Response",
+      "type": "groovy",
+      "properties": {
+        "script": "reply.groovy"
+      }
+    },
+    {
+      "id": "E",
+      "name": "End",
+      "type": "end"
+    }
+  ],
+  "edges": [
+    {
+      "id": "F1",
+      "source": "S",
+      "target": "Call"
+    },
+    {
+      "id": "F2",
+      "source": "Call",
+      "target": "Reply"
+    },
+    {
+      "id": "F3",
+      "source": "Reply",
+      "target": "E"
+    }
+  ],
+  "exceptionHandler": {
+    "script": "handler.groovy"
+  },
+  "resources": [
+    {
+      "path": "src/main/resources/script/reply.groovy",
+      "content": "import com.sap.gateway.ip.core.customdev.util.Message\nimport groovy.json.JsonSlurper\nimport groovy.json.JsonOutput\nMessage processData(Message message) {\ndef raw=message.getBody(String)\nmessage.setHeader('Content-Type','application/json')\nmessage.setBody(JsonOutput.toJson([status:'received',characters:raw.length(),containsExample:raw.contains('Example Domain')]))\nreturn message\n}"
+    },
+    {
+      "path": "src/main/resources/script/handler.groovy",
+      "content": "import com.sap.gateway.ip.core.customdev.util.Message\nimport groovy.json.JsonSlurper\nimport groovy.json.JsonOutput\nMessage processData(Message message) {\nmessage.setHeader('Content-Type','application/json')\nmessage.setHeader('CamelHttpResponseCode',500)\nmessage.setBody(JsonOutput.toJson([status:'handled-error',reason:'Synthetic exception handled']))\nreturn message\n}"
+    }
+  ]
+}

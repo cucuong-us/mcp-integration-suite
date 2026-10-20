@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile, mkdtemp } from "node:fs/promises";
 import { logInfo, projPath } from "..";
 import AdmZip from "adm-zip";
 import path from "node:path";
@@ -14,9 +14,9 @@ export const extractToFolder = async (
 	zipBuf: Buffer,
 	id: string
 ): Promise<string> => {
-	const iflowPath = path.join(projPath, "temp", id);
-	await rimraf(iflowPath);
-	await mkdir(iflowPath, { recursive: true });
+	const tempRoot = path.join(projPath, 'temp', String(process.pid));
+	await mkdir(tempRoot, { recursive: true });
+	const iflowPath = await mkdtemp(path.join(tempRoot, 'artifact-'));
 
 	const zip = new AdmZip(zipBuf);
 	zip.extractAllTo(iflowPath, true);

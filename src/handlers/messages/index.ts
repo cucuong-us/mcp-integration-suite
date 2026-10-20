@@ -18,17 +18,18 @@ This tool can be used to test mappings together with the endpoint of iflow if_ec
 If you get a error response you can use get-messages functionality to find out more about the error
 If not specified otherwise the user probably wants to see the text in response
 
-Currently only non CSRF-protected endpoints are supported for POST requests, which could be a reason for 403 or 401
+CSRF-protected endpoints use a HEAD token/cookie handshake. Runtime credentials need the configured sender role (usually ESBMessaging.send).
         `,
 		sendRequestSchema,
-		async ({ path, method, contentType, body, headers }) => {
+		async ({ path, method, contentType, body, headers, csrfProtected }) => {
 			try {
 				const requestResult = await sendRequestToCPI(
 					path,
 					method,
 					contentType,
 					body,
-					headers
+					headers,
+					csrfProtected
 				);
 
 				return {

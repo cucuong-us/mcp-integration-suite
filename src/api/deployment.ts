@@ -17,19 +17,23 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * @returns Staus e.g. SUCCESS, FAILED, ...
  */
 export const waitAndGetDeployStatus = async (
-	taskId: string
+	taskId: string,
+	timeoutMs = 120000
 ): Promise<string> => {
+	if (!taskId || typeof taskId !== 'string') throw new Error('Deployment returned no usable task ID');
+	const deadline = Date.now() + timeoutMs;
 	let statusObj = await buildAndDeployStatusApi
 		.requestBuilder()
 		.getByKey(taskId)
 		.execute(await getCurrentDestination());
 
 	while (statusObj.status === "DEPLOYING") {
+		if (Date.now() >= deadline) throw new Error('Deployment timed out; task remains active: ' + taskId);
+		await sleep(1000);
 		statusObj = await buildAndDeployStatusApi
 			.requestBuilder()
 			.getByKey(taskId)
 			.execute(await getCurrentDestination());
-		await sleep(1000);
 	}
 
 	if (!statusObj.status) {

@@ -2,7 +2,7 @@ import path from "path";
 import { projPath } from "../../..";
 import { convertAll } from "./bpmnLib";
 import { glob } from "glob";
-import { mkdtemp, readFile, rm } from "fs/promises";
+import { mkdtemp, readFile, rm, mkdir } from "fs/promises";
 // returns base64 image png
 export const getiFlowToImage = async (iflowPath: string): Promise<string> => {
 	const iflowXmPath = (await glob(iflowPath.replace(/\\/g, '/') + "/**/*.iflw"))[0];
@@ -11,8 +11,10 @@ export const getiFlowToImage = async (iflowPath: string): Promise<string> => {
 		throw new Error("Could not locate iflow XML");
 	}
 
+	const temporaryRoot=path.join(projPath,'temp',String(process.pid));
+	await mkdir(temporaryRoot,{recursive:true});
 	const tempPngPath = path.join(
-		await mkdtemp(path.join(projPath, "temp", "file")),
+		await mkdtemp(path.join(temporaryRoot, "file")),
 		"output.png"
 	);
 

@@ -1,0 +1,167 @@
+{
+  "id": "McpOrderValidation10",
+  "name": "MCP Order Validation - 10 Steps",
+  "endpoint": "/mcp/safety/order10",
+  "csrfProtected": true,
+  "nodes": [
+    {
+      "id": "Start",
+      "name": "Receive Order",
+      "type": "start",
+      "x": 200,
+      "y": 170
+    },
+    {
+      "id": "Validate",
+      "name": "Validate Order",
+      "type": "groovy",
+      "properties": {
+        "script": "validate.groovy"
+      },
+      "x": 300,
+      "y": 160
+    },
+    {
+      "id": "Route",
+      "name": "Valid Order?",
+      "type": "router",
+      "x": 470,
+      "y": 170
+    },
+    {
+      "id": "Prepare",
+      "name": "Prepare Mapping Input",
+      "type": "contentModifier",
+      "x": 580,
+      "y": 140
+    },
+    {
+      "id": "Map",
+      "name": "Map Order Fields",
+      "type": "messageMapping",
+      "properties": {
+        "mappinguri": "dir://mmap/src/main/resources/mapping/mm_order.mmap",
+        "mappingname": "mm_order",
+        "mappingpath": "src/main/resources/mapping/mm_order"
+      },
+      "x": 730,
+      "y": 140
+    },
+    {
+      "id": "Convert",
+      "name": "XML to JSON",
+      "type": "xmlToJson",
+      "properties": {
+        "useNamespaces": "false"
+      },
+      "x": 880,
+      "y": 140
+    },
+    {
+      "id": "Response",
+      "name": "Build Success Response",
+      "type": "groovy",
+      "properties": {
+        "script": "success.groovy"
+      },
+      "x": 1030,
+      "y": 140
+    },
+    {
+      "id": "EndOk",
+      "name": "Accepted",
+      "type": "end",
+      "x": 1190,
+      "y": 155
+    },
+    {
+      "id": "Reject",
+      "name": "Build Rejection",
+      "type": "groovy",
+      "properties": {
+        "script": "reject.groovy"
+      },
+      "x": 580,
+      "y": 330
+    },
+    {
+      "id": "EndReject",
+      "name": "Rejected",
+      "type": "end",
+      "x": 750,
+      "y": 345
+    }
+  ],
+  "edges": [
+    {
+      "id": "F1",
+      "source": "Start",
+      "target": "Validate"
+    },
+    {
+      "id": "F2",
+      "source": "Validate",
+      "target": "Route"
+    },
+    {
+      "id": "F3",
+      "source": "Route",
+      "target": "Prepare",
+      "condition": "${property.validOrder} = 'true'",
+      "expressionType": "NonXML"
+    },
+    {
+      "id": "F4",
+      "source": "Prepare",
+      "target": "Map"
+    },
+    {
+      "id": "F5",
+      "source": "Map",
+      "target": "Convert"
+    },
+    {
+      "id": "F6",
+      "source": "Convert",
+      "target": "Response"
+    },
+    {
+      "id": "F7",
+      "source": "Response",
+      "target": "EndOk"
+    },
+    {
+      "id": "F8",
+      "source": "Route",
+      "target": "Reject",
+      "default": true
+    },
+    {
+      "id": "F9",
+      "source": "Reject",
+      "target": "EndReject"
+    }
+  ],
+  "resources": [
+    {
+      "path": "src/main/resources/script/validate.groovy",
+      "content": "import com.sap.gateway.ip.core.customdev.util.Message\nMessage processData(Message message) {\n  try {\n    def order = new XmlSlurper(false, false).parseText(message.getBody(String))\n    def valid = order.name() == 'Order' && order.OrderID.text().trim() && order.Items.Item.size() > 0 && order.TotalAmount.text().toBigDecimal() > 0\n    message.setProperty('validOrder', valid ? 'true' : 'false')\n    message.setProperty('validationError', valid ? '' : 'OrderID, Items and positive TotalAmount are required')\n  } catch (Exception e) {\n    message.setProperty('validOrder', 'false')\n    message.setProperty('validationError', 'Malformed order XML')\n  }\n  return message\n}"
+    },
+    {
+      "path": "src/main/resources/script/success.groovy",
+      "content": "import com.sap.gateway.ip.core.customdev.util.Message\nimport groovy.json.JsonSlurper\nimport groovy.json.JsonOutput\nMessage processData(Message message) {\n def order = new JsonSlurper().parseText(message.getBody(String))\n message.setHeader('Content-Type', 'application/json')\n message.setBody(JsonOutput.toJson([status:'accepted',order:order]))\n return message\n}"
+    },
+    {
+      "path": "src/main/resources/script/reject.groovy",
+      "content": "import com.sap.gateway.ip.core.customdev.util.Message\nimport groovy.json.JsonOutput\nMessage processData(Message message) {\n message.setHeader('Content-Type','application/json')\n message.setHeader('CamelHttpResponseCode',400)\n message.setBody(JsonOutput.toJson([status:'rejected',reason:message.getProperty('validationError')]))\n return message\n}"
+    },
+    {
+      "path": "src/main/resources/mapping/mm_order.mmap",
+      "content": "<xiObj xmlns=\"urn:sap-com:xi\">\r\n    <idInfo VID=\"01\">\r\n        <vc caption=\"LOCAL\" sp=\"-1\" swcGuid=\"00000000000000000000000000000000\" vcType=\"S\">\r\n            <clCxt consider=\"A\" />\r\n        </vc>\r\n        <key typeID=\"XI_TRAFO\" version=\"\" />\r\n        <version>1.0</version>\r\n    </idInfo>\r\n    <documentation>\r\n        <description />\r\n    </documentation>\r\n    <generic>\r\n        <admInf>\r\n            <modifBy></modifBy>\r\n            <modifAt></modifAt>\r\n            <modifAtLong>1743610664905</modifAtLong>\r\n            <owner />\r\n        </admInf>\r\n        <lnks>\r\n            <lnkRole kpos=\"1\" role=\"TARGET_IFR_MESS\">\r\n                <lnk rMode=\"R\">\r\n                    <key typeID=\"xsd\" version=\"1.1\">\r\n                        <elem>source.xsd</elem>\r\n                        <elem>src/main/resources/xsd</elem>\r\n                        <elem>Order</elem>\r\n                    </key>\r\n                </lnk>\r\n            </lnkRole>\r\n            <lnkRole kpos=\"1\" role=\"SOURCE_IFR_MESS\">\r\n                <lnk rMode=\"R\">\r\n                    <key typeID=\"xsd\" version=\"1.1\">\r\n                        <elem>source.xsd</elem>\r\n                        <elem>src/main/resources/xsd</elem>\r\n                        <elem>Order</elem>\r\n                    </key>\r\n                </lnk>\r\n            </lnkRole>\r\n        </lnks>\r\n        <textInfo loadedL=\"EN\">\r\n            <textObj id=\"70460f479c974872b801aa12afd732c9\" masterL=\"EN\" type=\"0\">\r\n                <texts lang=\"EN\">\r\n                    <text label=\"\" />\r\n                    <text label=\"21327ec998d3248b3333da4cbe20b699\"></text>\r\n                </texts>\r\n            </textObj>\r\n        </textInfo>\r\n    </generic>\r\n    <content>\r\n        <tr:XiTrafo xmlns:tr=\"urn:sap-com:xi:mapping:xitrafo\">\r\n            <tr:MetaData>\r\n                <mappingtool version=\"XI7.1\">\r\n                    <project version=\"XI7.1\">\r\n                        <libstorage>\r\n                            <entry name=\"usernamespace\">\r\n                                <functionstorage version=\"XI7.1\">\r\n                                    <key>\r\n                                        <key typeID=\"\">\r\n                                            <elem></elem>\r\n                                            <elem></elem>\r\n                                        </key>\r\n                                    </key>\r\n                                    <classname></classname>\r\n                                    <package></package>\r\n                                    <imports />\r\n                                    <globals>\r\n                                        <javaText />\r\n                                    </globals>\r\n                                    <init>\r\n                                        <functionmodel>\r\n                                            <signature cacheType=\"0\" />\r\n                                            <name></name>\r\n                                            <key></key>\r\n                                            <tab></tab>\r\n                                            <title></title>\r\n                                            <uiTitle></uiTitle>\r\n                                            <implementation type=\"udf\">\r\n                                                <javaText />\r\n                                            </implementation>\r\n                                        </functionmodel>\r\n                                    </init>\r\n                                    <cleanup>\r\n                                        <javaText />\r\n                                    </cleanup>\r\n                                    <usedjars />\r\n                                </functionstorage>\r\n                            </entry>\r\n                        </libstorage>\r\n                        <transformation>\r\n                            <brick gid=\"0\" path=\"/Order\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/OrderID\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/OrderID\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/Customer\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/Customer\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/Customer/Name\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/Customer/Name\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/Customer/Email\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/Customer/Email\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/Customer/Address\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/Customer/Address\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/OrderDate\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/OrderDate\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/Items/Item\" type=\"Dst\">\r\n                                <viewData x=\"331\" y=\"71\" />\r\n                                <arg>\r\n                                    <brick fname=\"createIf\" fns=\"dflt\" type=\"Func\">\r\n                                        <viewData x=\"219\" y=\"54\" />\r\n                                        <arg>\r\n                                            <brick fname=\"exists\" fns=\"dflt\" type=\"Func\">\r\n                                                <viewData x=\"121\" y=\"77\" />\r\n                                                <arg>\r\n                                                    <brick gid=\"0\"\r\n                                                        path=\"/Order/Items/Item/ProductID\"\r\n                                                        type=\"Src\">\r\n                                                        <viewData x=\"7\" y=\"98\" />\r\n                                                    </brick>\r\n                                                </arg>\r\n                                            </brick>\r\n                                        </arg>\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/Items/Item/ProductID\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/Items/Item/ProductID\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/Items/Item/Name\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/Items/Item/Name\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/Items/Item/Quantity\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/Items/Item/Quantity\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/Items/Item/Price\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/Items/Item/Price\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                            <brick gid=\"0\" path=\"/Order/TotalAmount\" type=\"Dst\">\r\n                                <viewData x=\"200\" y=\"40\" />\r\n                                <arg>\r\n                                    <brick gid=\"0\" path=\"/Order/TotalAmount\" type=\"Src\">\r\n                                        <viewData x=\"50\" y=\"40\" />\r\n                                    </brick>\r\n                                </arg>\r\n                                <group />\r\n                            </brick>\r\n                        </transformation>\r\n                        <testData>\r\n                            <instances />\r\n                        </testData>\r\n                        <ViewState></ViewState>\r\n                        <pcont />\r\n                    </project>\r\n                </mappingtool>\r\n            </tr:MetaData>\r\n            <tr:ByteCodeJar />\r\n            <tr:SourceStructure />\r\n            <tr:TargetStructure />\r\n            <tr:Multiplicity>1:1</tr:Multiplicity>\r\n            <tr:SourceParameters>\r\n                <tr:Parameter>\r\n                    <tr:Position>1</tr:Position>\r\n                    <tr:Minoccurs>1</tr:Minoccurs>\r\n                    <tr:Maxoccurs>1</tr:Maxoccurs>\r\n                </tr:Parameter>\r\n            </tr:SourceParameters>\r\n            <tr:TargetParameters>\r\n                <tr:Parameter>\r\n                    <tr:Position>1</tr:Position>\r\n                    <tr:Minoccurs>1</tr:Minoccurs>\r\n                    <tr:Maxoccurs>1</tr:Maxoccurs>\r\n                </tr:Parameter>\r\n            </tr:TargetParameters>\r\n        </tr:XiTrafo>\r\n    </content>\r\n</xiObj>"
+    },
+    {
+      "path": "src/main/resources/xsd/source.xsd",
+      "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">\r\n\r\n  <!-- Root-Element: Order mit verschachtelter Customer- und Items-Struktur -->\r\n  <xs:element name=\"Order\">\r\n    <xs:complexType>\r\n      <xs:sequence>\r\n        <xs:element name=\"OrderID\" type=\"xs:string\"/>\r\n        <xs:element name=\"Customer\">\r\n          <xs:complexType>\r\n            <xs:sequence>\r\n              <xs:element name=\"Name\" type=\"xs:string\"/>\r\n              <xs:element name=\"Email\" type=\"xs:string\"/>\r\n              <xs:element name=\"Address\" type=\"xs:string\"/>\r\n            </xs:sequence>\r\n          </xs:complexType>\r\n        </xs:element>\r\n        <xs:element name=\"OrderDate\" type=\"xs:date\"/>\r\n        <xs:element name=\"Items\">\r\n          <xs:complexType>\r\n            <xs:sequence>\r\n              <xs:element name=\"Item\" maxOccurs=\"unbounded\">\r\n                <xs:complexType>\r\n                  <xs:sequence>\r\n                    <xs:element name=\"ProductID\" type=\"xs:string\"/>\r\n                    <xs:element name=\"Name\" type=\"xs:string\"/>\r\n                    <xs:element name=\"Quantity\" type=\"xs:integer\"/>\r\n                    <xs:element name=\"Price\" type=\"xs:decimal\"/>\r\n                  </xs:sequence>\r\n                </xs:complexType>\r\n              </xs:element>\r\n            </xs:sequence>\r\n          </xs:complexType>\r\n        </xs:element>\r\n        <xs:element name=\"TotalAmount\" type=\"xs:decimal\"/>\r\n      </xs:sequence>\r\n    </xs:complexType>\r\n  </xs:element>\r\n\r\n</xs:schema>\r\n"
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 DISCLAIMER: This server is still experimental. Use at your own risk!
 # MCP Integration Suite Server
 
+This fork adds guarded iFlow creation, validation, deployment tracking and runtime testing. See [the safe iFlow guide](README-SAFE-IFLOWS.md) for setup, blueprint examples and verification limits.
+
 A ModelContextProtocol (MCP) Server for SAP Integration Suite.
 For more details/setup instructions please check out [this blog](https://community.sap.com/t5/technology-blog-posts-by-members/using-integration-suite-with-the-power-of-ai/ba-p/14067293): 
 
@@ -129,7 +131,7 @@ When working with IFlows, you'll interact with these components:
    - `src/main/resources/` is the root
    - `src/main/resources/mapping` contains message mappings
    - `src/main/resources/xsd` contains XSD files
-   - `src/main/resources/scripts` contains scripts
+   - `src/main/resources/script` contains scripts
    - `src/main/resources/scenarioflows/integrationflow/<iflow id>.iflw` contains the IFlow
 
 4. **Use a step-by-step approach**:

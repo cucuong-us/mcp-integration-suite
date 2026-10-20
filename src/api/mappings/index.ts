@@ -1,3 +1,4 @@
+import {updateDesignSafely} from "../iflow/safeDesign";
 import { logInfo } from "../..";
 import {
 	deployMessageMappingDesigntimeArtifact,
@@ -40,44 +41,8 @@ export const updateMessageMapping = async (
 	messageMappingUpdate: { status: number; text: string };
 	deployStatus?: string;
 }> => {
-	const messagemappingPath = await getMessageMappingFolder(id);
-
-	for (const file of messagemappingFiles) {
-		await patchFile(
-			messagemappingPath,
-			file.filepath,
-			file.content,
-			file.appendMode
-		);
-	}
-
-	const messagemappingBuffer = await folderToZipBuffer(messagemappingPath);
-
-	const url = await messageMappingDesigntimeArtifactsApi
-		.requestBuilder()
-		.getByKey(id, "active")
-		.url(await getCurrentDestination());
-
-	const res = await executeHttpRequest(await getCurrentDestination(), {
-		url,
-		method: "PUT",
-		headers: { "Content-Type": "application/json" },
-		data: JSON.stringify({
-			Name: id,
-			ArtifactContent: messagemappingBuffer.toString("base64"),
-		}),
-	});
-
-	if (res.status !== 200) {
-		throw new Error("Error updating message mapping");
-	}
-
-	return {
-		messageMappingUpdate: {
-			status: res.status,
-			text: "Succesfully updated mapping",
-		},
-	};
+ const result=await updateDesignSafely(id,messagemappingFiles,'MessageMappingDesigntimeArtifacts');
+ return {messageMappingUpdate:{status:result.status,text:'Updated mapping; XML structure checked, SAP mapping compilation remains to be verified'},...{validation:result}};
 };
 
 export const saveAsNewVersion = async (id: string) => {
@@ -118,7 +83,7 @@ export const deployMapping = async (id: string): Promise<string> => {
 	}
 
 	// Actually SAP API is broken, it returns an empty body instead of the taskId, so waiting for deployment isn't possible
-	if (deployRes.data) {
+	if (typeof deployRes.data !== 'string' || !deployRes.data.trim()) {
 		throw new Error(`The deployment was triggered successfully altough didn't return a token to wait for the deployment to finish
 		But you can still use get-deploy-error to check the status`);
 	}

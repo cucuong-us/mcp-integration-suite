@@ -135,7 +135,7 @@ describe('File Based Utility Functions', () => {
             // Note: The current implementation of patchFile overwrites even in append mode due to writeFile running after appendFile.
             // This test will likely fail unless the implementation is fixed.
             // Let's expect the overwritten content for now, reflecting the current code behavior.
-            expect(finalRead).toEqual(appendedContent);
+            expect(finalRead).toEqual(expectedContent);
             // If fixed, the expectation should be: expect(finalRead).toEqual(expectedContent);
         });
 
