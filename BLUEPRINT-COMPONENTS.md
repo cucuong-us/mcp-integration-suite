@@ -26,6 +26,10 @@ Các tool `preview-iflow-blueprint` và `create-iflow-from-blueprint` dùng cùn
 
 Exception Subprocess vẫn được cấu hình bằng `exceptionHandler`, có script Groovy đi kèm. Giới hạn toàn bundle là 100 nodes/200 edges, tối đa 20 local processes. Các phiên bản Splitter/adapter khác, như Iterating Splitter và OData V4, chưa nằm trong schema này.
 
+`exceptionHandler.end` nhận `message` (mặc định để tương thích flow cũ) hoặc `error`. Chọn `error` khi script xử lý lỗi cần return bình thường sau khi ghi metadata nhưng MPL vẫn phải FAILED. Compiler sinh Error End Event từ template SAP và dùng IDs theo mẫu export cho Exception Subprocess. Timer start cũng chỉ đặt metadata ở `timerEventDefinition`, phù hợp cấu trúc export SAP.
+
+Bài test nghiệp vụ [Excel PO → IDoc dry-run](resources/scenarios/excel-po-dryrun/README.md) dùng các khả năng này để kiểm tra thực thi Groovy, mapping ứng viên và error path; không gửi IDoc tạo PO.
+
 ## Sender
 
 Sender là cấu hình ở cấp blueprint, không phải một node adapter riêng:

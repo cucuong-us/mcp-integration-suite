@@ -1,0 +1,14 @@
+{
+  "source": "synthetic test fixture; no ERP lookup performed",
+  "vendors": {
+    "0000100001": { "companyCodes": ["1000"], "purchOrgs": ["1000"] },
+    "0000100002": { "companyCodes": ["2000"], "purchOrgs": ["2000"] }
+  },
+  "materials": {
+    "MAT-100": { "plants": ["1000"], "units": ["EA"] },
+    "MAT-200": { "plants": ["1000"], "units": ["EA"] },
+    "MAT-300": { "plants": ["2000"], "units": ["KG"] }
+  },
+  "plants": ["1000", "2000"],
+  "currencies": ["USD", "EUR"]
+}

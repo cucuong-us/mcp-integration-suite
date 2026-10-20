@@ -4,6 +4,8 @@ Tài liệu này mô tả bản mở rộng trong commit [`9e8c8e7`](https://git
 
 Bản bổ sung tiếp theo mở rộng Timer, Splitter/Gather, Multicast/Join, Local Process, JSON to XML và adapter JMS/SFTP/OData V2. Xem [phạm vi mới, ví dụ và kết quả kiểm thử ngày 2026-10-20](BLUEPRINT-COMPONENTS.md). Các con số 56 tests/bốn flow dưới đây là kết quả lịch sử của commit `9e8c8e7`; bộ hiện tại đã tăng lên 75 tests/11 suites.
 
+Bài test tiếp theo [Excel PO → IDoc dry-run](resources/scenarios/excel-po-dryrun/README.md) bổ sung 28 ca Groovy thật, ba ca thực thi CPI/MPL và nâng Jest lên 78 tests/12 suites. Bài test cũng dẫn tới sửa cấu trúc timer, chuẩn hóa ID Exception Subprocess và thêm lựa chọn Error End để giữ trạng thái FAILED sau khi ghi metadata. Các kết quả lịch sử bên dưới không thay thế bằng chứng nghiệp vụ trong bài test mới.
+
 ## 1. Lỗi và hạn chế đã sửa
 
 Không phải mọi thay đổi dưới đây đều là lỗi vi phạm tài liệu SAP. Có lỗi logic trong code, có cách đọc response không đúng với tenant đã kiểm tra, và có những biện pháp bảo vệ trước đây chưa có.

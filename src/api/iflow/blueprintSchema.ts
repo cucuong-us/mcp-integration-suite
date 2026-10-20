@@ -177,6 +177,7 @@ export const blueprintSchema = z
       .object({
         script: z.string().regex(/^[A-Za-z0-9_.-]+\.groovy$/),
         name: z.string().default("Handle Exception"),
+        end: z.enum(["message", "error"]).default("message"),
       })
       .strict()
       .optional(),
@@ -259,7 +260,7 @@ export function validateBlueprintGraph(bp: ParsedBlueprint) {
             "BPMNDiagram_1",
             "BPMNPlane_1",
           ].includes(id) ||
-          /^(DI_|Exception_|Receiver_|Channel_|Condition_|Local_|Timer_|(?:Process|StartEvent|EndEvent|CallActivity|ServiceTask|ExclusiveGateway|ParallelGateway|SequenceFlow)_Local_)/.test(
+          /^(DI_|Exception_|Receiver_|Channel_|Condition_|Local_|Timer_|TimerEventDefinition_|(?:SubProcess|StartEvent|EndEvent|CallActivity|SequenceFlow)_Exception|(?:Process|StartEvent|EndEvent|CallActivity|ServiceTask|ExclusiveGateway|ParallelGateway|SequenceFlow)_Local_)/.test(
             id,
           ),
       )

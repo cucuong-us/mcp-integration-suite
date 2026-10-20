@@ -1,0 +1,87 @@
+{
+  "checkedOn": "2026-10-20",
+  "scope": "Excel PO to candidate IDoc dry-run; no backend connection",
+  "typescriptBuild": "passed",
+  "unitTests": {
+    "passed": 78,
+    "suites": 12
+  },
+  "groovyTests": {
+    "passed": 28,
+    "total": 28,
+    "runtime": "Java 1.8.0_461 / Groovy 2.4.21"
+  },
+  "mode": "dry-run",
+  "backendPoCreated": false,
+  "backendSchemaVerified": false,
+  "externalReceivers": 0,
+  "editorVerified": false,
+  "cases": [
+    {
+      "case": "valid",
+      "id": "McpExcelPoDryRun_valid_b697243e",
+      "coreNodes": 10,
+      "outcome": "passed",
+      "localValid": true,
+      "sapValidation": "passed",
+      "taskId": "f734c905-cc25-46c4-656e-a36a7ea94d98",
+      "deployment": "SUCCESS",
+      "runtime": "STARTED",
+      "mplStatus": "COMPLETED",
+      "messageGuid": "AGrXeaI1nifAv0Rtm7c3SoRm8Zvq",
+      "logStart": "2026-10-20T14:24:34.477Z",
+      "evidence": {
+        "DryRunItemCount": "3",
+        "DryRunMasterData": "SYNTHETIC_FIXTURE",
+        "DryRunExternalCalls": "0",
+        "DryRunOrderCount": "2",
+        "DryRunResult": "CANDIDATE_VALIDATED_NOT_POSTED",
+        "DryRunSchemaVerified": "false",
+        "DryRunCase": "valid"
+      }
+    },
+    {
+      "case": "zero-quantity",
+      "id": "McpExcelPoDryRun_zero_quantity_6e6f2c17",
+      "coreNodes": 10,
+      "outcome": "passed",
+      "localValid": true,
+      "sapValidation": "passed",
+      "taskId": "b36e0261-3716-43e1-68f6-aa1a2a9d4124",
+      "deployment": "SUCCESS",
+      "runtime": "STARTED",
+      "mplStatus": "FAILED",
+      "messageGuid": "AGrXeakhrejoqhxtA4GY1gz44lxE",
+      "logStart": "2026-10-20T14:24:41.480Z",
+      "evidence": {
+        "DryRunExternalCalls": "0",
+        "DryRunErrorCode": "PO_NUMBER_RANGE",
+        "DryRunCase": "zero-quantity",
+        "DryRunResult": "REJECTED_OR_FAILED"
+      }
+    },
+    {
+      "case": "unknown-vendor",
+      "id": "McpExcelPoDryRun_unknown_vendor_dec02da6",
+      "coreNodes": 10,
+      "outcome": "passed",
+      "localValid": true,
+      "sapValidation": "passed",
+      "taskId": "f45e2d2e-5848-4940-5a25-20b50edbc639",
+      "deployment": "SUCCESS",
+      "runtime": "STARTED",
+      "mplStatus": "FAILED",
+      "messageGuid": "AGrXebABhcQorC1sTudcj_Rdmv9f",
+      "logStart": "2026-10-20T14:24:48.105Z",
+      "evidence": {
+        "DryRunCase": "unknown-vendor",
+        "DryRunErrorCode": "MASTER_VENDOR_NOT_ALLOWED",
+        "DryRunExternalCalls": "0",
+        "DryRunResult": "REJECTED_OR_FAILED"
+      }
+    }
+  ],
+  "phase": "finished",
+  "mcpToolCount": 35,
+  "passed": true
+}

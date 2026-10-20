@@ -11,6 +11,8 @@
         "dev": "npm run build:tsc && npm run dev:inspector",
         "dev:inspector": "npx @modelcontextprotocol/inspector node ./dist/index.js",
         "test": "jest",
+        "test:po-dryrun": "node resources/scenarios/excel-po-dryrun/tests/run-offline.cjs",
+        "test:po-dryrun:live": "node resources/scenarios/excel-po-dryrun/run-live-dryrun.cjs --live",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
         "watch:log": "tail -n 20 -F ~/Library/Logs/Claude/mcp-server-mcp-integration-suite.log"

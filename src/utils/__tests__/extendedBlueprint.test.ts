@@ -107,7 +107,14 @@ describe("Extended blueprint graph and adapters", () => {
     expect(elements(doc, B, "timerEventDefinition")).toHaveLength(1);
     expect(elements(doc, B, "messageFlow")).toHaveLength(0);
     expect(doc.getElementById("Participant_1")).toBeNull();
-    expect(prop(doc, "Timer_Start", "scheduleKey")).toContain("fireNow=true");
+    expect(prop(doc, "TimerEventDefinition_Start", "scheduleKey")).toContain(
+      "fireNow=true",
+    );
+    expect(
+      Array.from(doc.getElementById("Start")!.childNodes).some(
+        (n: any) => n.localName === "extensionElements",
+      ),
+    ).toBe(false);
   });
   it("prevents mixing a timer sender with an HTTP endpoint", () => {
     const bp = load("McpTimerRunOnceLab");
@@ -119,7 +126,9 @@ describe("Extended blueprint graph and adapters", () => {
     const table =
       "<row><cell>triggerType</cell><cell>cron</cell></row><row><cell>schedule1</cell><cell>0+0+0+?+*+*+*</cell></row>";
     bp.sender = { type: "timer", scheduleKey: table };
-    expect(prop(xml(bp), "Timer_Start", "scheduleKey")).toBe(table);
+    expect(prop(xml(bp), "TimerEventDefinition_Start", "scheduleKey")).toBe(
+      table,
+    );
     bp.sender = { type: "timer", runOnce: true, scheduleKey: table };
     expect(() => compileBlueprint(bp)).toThrow("exactly one");
     bp.sender = { type: "timer", scheduleKey: "<broken>" };

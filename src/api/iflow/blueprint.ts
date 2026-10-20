@@ -91,6 +91,10 @@ const donors: Record<string, [string, string]> = {
     "examples/iflows/if_google_ads_campaigns/**/*.iflw",
     "StartEvent_457",
   ],
+  errorEnd: [
+    "examples/iflows/Replicate_product_inventory_info/**/*.iflw",
+    "EndEvent_433",
+  ],
 };
 function donor(type: string): Element {
   if (extendedTemplates[type]) {
@@ -276,7 +280,11 @@ export function compileBlueprint(input: Blueprint) {
       bp.sender.type === "timer"
     ) {
       const timer = doc.importNode(donor("timerDefinition"), true) as Element;
-      timer.setAttribute("id", "Timer_" + n.id);
+      // Exported SAP timer starts carry metadata on timerEventDefinition only.
+      for (const child of Array.from(e.childNodes))
+        if ((child as Element).localName === "extensionElements")
+          e.removeChild(child);
+      timer.setAttribute("id", "TimerEventDefinition_" + n.id);
       if (bp.sender.scheduleKey)
         property(timer, "scheduleKey", bp.sender.scheduleKey);
       e.appendChild(timer);
@@ -439,18 +447,25 @@ export function compileBlueprint(input: Blueprint) {
   const exceptionEdges: { id: string; source: string; target: string }[] = [];
   if (bp.exceptionHandler) {
     const sub = doc.importNode(donor("exception"), true) as Element;
-    sub.setAttribute("id", "Exception_Subprocess");
+    sub.setAttribute("id", "SubProcess_Exception");
     sub.setAttribute("name", "Exception Subprocess");
     for (const child of Array.from(sub.childNodes))
       if ((child as Element).localName !== "extensionElements")
         sub.removeChild(child);
     const errStart = doc.importNode(donor("errorStart"), true) as Element;
     const handler = doc.importNode(donor("groovy"), true) as Element;
-    const errEnd = doc.importNode(donor("end"), true) as Element;
+    const errEnd = doc.importNode(
+      donor(bp.exceptionHandler.end === "error" ? "errorEnd" : "end"),
+      true,
+    ) as Element;
     for (const [e, id, name] of [
-      [errStart, "Exception_Start", "Error Start"],
-      [handler, "Exception_Handle", bp.exceptionHandler.name],
-      [errEnd, "Exception_End", "Error Handled"],
+      [errStart, "StartEvent_Exception", "Error Start"],
+      [handler, "CallActivity_Exception", bp.exceptionHandler.name],
+      [
+        errEnd,
+        "EndEvent_Exception",
+        bp.exceptionHandler.end === "error" ? "Error End" : "Error Handled",
+      ],
     ] as const) {
       e.setAttribute("id", id);
       e.setAttribute("name", name);
@@ -464,14 +479,14 @@ export function compileBlueprint(input: Blueprint) {
     property(handler, "scriptFunction", "");
     exceptionEdges.push(
       {
-        id: "Exception_F1",
-        source: "Exception_Start",
-        target: "Exception_Handle",
+        id: "SequenceFlow_Exception_1",
+        source: "StartEvent_Exception",
+        target: "CallActivity_Exception",
       },
       {
-        id: "Exception_F2",
-        source: "Exception_Handle",
-        target: "Exception_End",
+        id: "SequenceFlow_Exception_2",
+        source: "CallActivity_Exception",
+        target: "EndEvent_Exception",
       },
     );
     for (const edge of exceptionEdges) {
@@ -522,15 +537,15 @@ export function compileBlueprint(input: Blueprint) {
       Math.max(
         ...bp.nodes.map((n) => coords.get(n.id)!).map((c) => c.y + c.h),
       ) + 80;
-    coords.set("Exception_Subprocess", { x: 200, y, w: 480, h: 150 });
-    coords.set("Exception_Start", { x: 230, y: y + 60, w: 32, h: 32 });
-    coords.set("Exception_Handle", { x: 340, y: y + 45, w: 100, h: 60 });
-    coords.set("Exception_End", { x: 570, y: y + 60, w: 32, h: 32 });
+    coords.set("SubProcess_Exception", { x: 200, y, w: 480, h: 150 });
+    coords.set("StartEvent_Exception", { x: 230, y: y + 60, w: 32, h: 32 });
+    coords.set("CallActivity_Exception", { x: 340, y: y + 45, w: 100, h: 60 });
+    coords.set("EndEvent_Exception", { x: 570, y: y + 60, w: 32, h: 32 });
   }
   for (const [index, g] of graphs.entries()) {
     const bounds = g.nodes.map((n) => coords.get(n.id)!);
     if (index === 0 && bp.exceptionHandler)
-      bounds.push(coords.get("Exception_Subprocess")!);
+      bounds.push(coords.get("SubProcess_Exception")!);
     const x = Math.min(...bounds.map((c) => c.x)) - 60,
       y = Math.min(...bounds.map((c) => c.y)) - 80;
     coords.set(index === 0 ? "Participant_Process_1" : "Local_" + g.id, {
