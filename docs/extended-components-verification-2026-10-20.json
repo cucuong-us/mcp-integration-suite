@@ -1,0 +1,25 @@
+{
+  "checkedOn": "2026-10-20",
+  "recordType": "sanitized summary of local checks and MCP calls against an isolated SAP test package",
+  "offline": { "testsPassed": 75, "suitesPassed": 11, "typescriptBuild": "passed" },
+  "scenarios": [
+    { "blueprint": "McpSplitterGatherLab.json", "sapValidation": "passed", "deployment": "SUCCESS", "runtime": "STARTED" },
+    { "blueprint": "McpParallelMulticastLab.json", "sapValidation": "passed", "deployment": "SUCCESS", "runtime": "STARTED" },
+    { "blueprint": "McpSequentialMulticastLab.json", "sapValidation": "passed", "deployment": "SUCCESS", "runtime": "STARTED" },
+    { "blueprint": "McpLocalProcessConverterLab.json", "sapValidation": "passed", "deployment": "SUCCESS", "runtime": "STARTED" },
+    { "blueprint": "McpTimerRunOnceLab.json", "sapValidation": "passed", "deployment": "SUCCESS", "runtime": "STARTED", "observedMplStatuses": ["DISCARDED"] },
+    { "blueprint": "McpJmsReceiverLab.json", "sapValidation": "passed", "deployment": "not-tested", "runtime": "not-tested" },
+    { "blueprint": "McpSftpReceiverLab.json", "sapValidation": "passed", "deployment": "not-tested", "runtime": "not-tested" },
+    { "blueprint": "McpSftpSenderLab.json", "sapValidation": "passed", "deployment": "not-tested", "runtime": "not-tested" },
+    { "blueprint": "McpODataV2ReceiverLab.json", "sapValidation": "passed", "deployment": "not-tested", "runtime": "not-tested" }
+  ],
+  "editorVerified": false,
+  "businessExecutionVerified": false,
+  "limits": [
+    "New component graphical editor checks were not completed after Computer Use stopped because it could not determine the browser URL reliably.",
+    "No external JMS/SFTP/OData connectivity or business payload assertions were verified.",
+    "One timer MPL was DISCARDED; this does not establish successful execution.",
+    "Recurring timer schedule tables and non-default OData operations were not live-tested.",
+    "JMS sender, OData V4 and Iterating Splitter are not implemented in the blueprint schema."
+  ]
+}

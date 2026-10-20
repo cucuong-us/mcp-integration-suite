@@ -2,6 +2,8 @@
 
 Tài liệu này mô tả bản mở rộng trong commit [`9e8c8e7`](https://github.com/cucuong-us/mcp-integration-suite/commit/9e8c8e7cbba6a5d0de8653835efd9d51686a2d0c), so với commit gốc `38b771644432724d67596046796074863d7cc9e5` của `1nbuc/mcp-integration-suite`. Commit triển khai thay đổi 43 file; commit bổ sung tài liệu này không thay đổi logic server.
 
+Bản bổ sung tiếp theo mở rộng Timer, Splitter/Gather, Multicast/Join, Local Process, JSON to XML và adapter JMS/SFTP/OData V2. Xem [phạm vi mới, ví dụ và kết quả kiểm thử ngày 2026-10-20](BLUEPRINT-COMPONENTS.md). Các con số 56 tests/bốn flow dưới đây là kết quả lịch sử của commit `9e8c8e7`; bộ hiện tại đã tăng lên 75 tests/11 suites.
+
 ## 1. Lỗi và hạn chế đã sửa
 
 Không phải mọi thay đổi dưới đây đều là lỗi vi phạm tài liệu SAP. Có lỗi logic trong code, có cách đọc response không đúng với tenant đã kiểm tra, và có những biện pháp bảo vệ trước đây chưa có.

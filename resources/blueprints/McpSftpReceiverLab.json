@@ -1,0 +1,47 @@
+{
+  "id": "McpSftpReceiverLab",
+  "name": "McpSftpReceiverLab",
+  "endpoint": "/mcp/McpSftpReceiverLab",
+  "nodes": [
+    {
+      "id": "Start",
+      "name": "Start",
+      "type": "start",
+      "x": 200,
+      "y": 170
+    },
+    {
+      "id": "WriteFile",
+      "name": "WriteFile",
+      "type": "send",
+      "properties": {},
+      "receiver": {
+        "type": "sftp",
+        "host": "sftp.example.com:22",
+        "directory": "/mcp-test",
+        "fileName": "sample.xml",
+        "credentialName": "McpSftpCredential",
+        "name": "FileReceiver"
+      }
+    },
+    {
+      "id": "End",
+      "name": "End",
+      "type": "end",
+      "x": 1100,
+      "y": 170
+    }
+  ],
+  "edges": [
+    {
+      "id": "F0",
+      "source": "Start",
+      "target": "WriteFile"
+    },
+    {
+      "id": "F1",
+      "source": "WriteFile",
+      "target": "End"
+    }
+  ]
+}

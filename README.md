@@ -5,6 +5,8 @@ This fork adds guarded iFlow creation, validation, deployment tracking and runti
 
 See [the detailed change report (Vietnamese)](CHANGES-SAFE-IFLOWS.md) for original bugs, fixes, new tools and verified test results.
 
+See [supported blueprint components](BLUEPRINT-COMPONENTS.md) for Timer, Splitter/Gather, Multicast/Join, local processes, JSON to XML and JMS/SFTP/OData V2 configuration.
+
 A ModelContextProtocol (MCP) Server for SAP Integration Suite.
 For more details/setup instructions please check out [this blog](https://community.sap.com/t5/technology-blog-posts-by-members/using-integration-suite-with-the-power-of-ai/ba-p/14067293): 
 

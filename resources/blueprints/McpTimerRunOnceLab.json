@@ -1,0 +1,45 @@
+{
+  "id": "McpTimerRunOnceLab",
+  "name": "McpTimerRunOnceLab",
+  "nodes": [
+    {
+      "id": "Start",
+      "name": "Start",
+      "type": "start",
+      "x": 200,
+      "y": 170
+    },
+    {
+      "id": "Prepare",
+      "name": "Prepare",
+      "type": "contentModifier",
+      "properties": {
+        "bodyType": "constant",
+        "wrapContent": "<hello/>"
+      }
+    },
+    {
+      "id": "End",
+      "name": "End",
+      "type": "end",
+      "x": 1100,
+      "y": 170
+    }
+  ],
+  "edges": [
+    {
+      "id": "F0",
+      "source": "Start",
+      "target": "Prepare"
+    },
+    {
+      "id": "F1",
+      "source": "Prepare",
+      "target": "End"
+    }
+  ],
+  "sender": {
+    "type": "timer",
+    "runOnce": true
+  }
+}

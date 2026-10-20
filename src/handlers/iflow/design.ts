@@ -35,7 +35,7 @@ export function registerDesignHandlers(server: McpServerWithMiddleware) {
   );
   server.registerToolIntegrationSuite(
     "preview-iflow-blueprint",
-    "Compile a graph into an SAP iFlow ZIP with component metadata and complete BPMN diagram. Local only. Supports start/end, contentModifier, groovy, router, xmlToJson, messageMapping, requestReply (HTTPS receiver), optional exceptionHandler. Properties use SAP component keys. Supply scripts and mapping resources explicitly. Structural checks do not certify SAP editor compatibility.",
+    "Compile a graph into an SAP iFlow ZIP with component metadata and BPMN diagram. Local only. Supports start/end, contentModifier, groovy, router, xmlToJson/jsonToXml, messageMapping, generalSplitter/gather, multicast/sequentialMulticast with joinId and join, processCall with localProcesses, requestReply (HTTP/OData V2 receiver), send (JMS/SFTP receiver), HTTPS/timer run-once/SFTP sender and optional exceptionHandler. Supply scripts/mapping/EDMX resources explicitly. Properties use SAP component keys. Structural checks do not certify SAP editor or runtime compatibility.",
     { blueprint: blueprintSchema },
     async ({ blueprint }) => {
       try {
@@ -48,6 +48,7 @@ export function registerDesignHandlers(server: McpServerWithMiddleware) {
           artifact: file,
           validation: compiled.validation,
           nodes: compiled.nodes,
+          idMap: compiled.idMap,
         });
       } catch (e) {
         return { isError: true, content: [formatError(e)] };

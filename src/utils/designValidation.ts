@@ -107,7 +107,7 @@ export function validateDesignZip(
   )
     error("MISSING_MAPPING", "", "Expected a message mapping resource");
   for (const [file, content] of files) {
-    if (!/\.(iflw|xml|xsd|mmap|xsl|xslt)$/i.test(file)) continue;
+    if (!/\.(iflw|xml|xsd|mmap|xsl|xslt|edmx)$/i.test(file)) continue;
     const text = content.toString("utf8");
     if (/<!DOCTYPE|<!ENTITY/i.test(text)) {
       error("XML_DTD", file, "DTD/entity declarations are not supported");
@@ -247,6 +247,42 @@ export function validateDesignZip(
           "Local script not found: " + props.get("script"),
           id,
         );
+      if (
+        props.get("processId") &&
+        ids.get(props.get("processId")!)?.localName !== "process"
+      )
+        error(
+          "MISSING_LOCAL_PROCESS",
+          file,
+          "Process Call references a missing process",
+          id,
+        );
+      if (
+        props.get("edmxFilePath") &&
+        !files.has("src/main/resources/" + props.get("edmxFilePath"))
+      )
+        error(
+          "MISSING_EDMX",
+          file,
+          "OData metadata resource does not exist",
+          id,
+        );
+      if (
+        ["Multicast", "SequentialMulticast"].includes(
+          props.get("activityType") || "",
+        )
+      ) {
+        for (const flow of elements(doc, BPMN, "sequenceFlow").filter(
+          (f) => f.getAttribute("sourceRef") === id,
+        ))
+          if (!flow.getAttribute("name")?.trim())
+            error(
+              "MULTICAST_BRANCH_NAME",
+              file,
+              "Multicast branches must have names",
+              flow.getAttribute("id") || undefined,
+            );
+      }
       if (node.localName === "exclusiveGateway") {
         const outgoing = elements(doc, BPMN, "sequenceFlow").filter(
           (f) => f.getAttribute("sourceRef") === id,

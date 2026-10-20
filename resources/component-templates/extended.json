@@ -1,0 +1,270 @@
+{
+  "generalSplitter": {
+    "tag": "callActivity",
+    "properties": {
+      "exprType": "XPath",
+      "Streaming": "true",
+      "StopOnExecution": "true",
+      "SplitterThreads": "10",
+      "splitExprValue": "",
+      "ParallelProcessing": "false",
+      "componentVersion": "1.5",
+      "activityType": "Splitter",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::GeneralSplitter/version::1.5.1",
+      "grouping": "1",
+      "splitType": "GeneralSplitter",
+      "timeOut": "300"
+    }
+  },
+  "gather": {
+    "tag": "callActivity",
+    "properties": {
+      "targetXPath": "",
+      "sourceXPath": "",
+      "messageType": "PlainText",
+      "aggregationAlgorithm": "concatenate-strategy",
+      "componentVersion": "1.2",
+      "activityType": "Gather",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::Gather/version::1.2.0",
+      "gatherFileNames": ""
+    }
+  },
+  "multicast": {
+    "tag": "parallelGateway",
+    "properties": {
+      "componentVersion": "1.1",
+      "activityType": "Multicast",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::Multicast/version::1.1.1",
+      "subActivityType": "parallel"
+    }
+  },
+  "sequentialMulticast": {
+    "tag": "parallelGateway",
+    "properties": {
+      "routingSequenceTable": "",
+      "componentVersion": "1.1",
+      "activityType": "SequentialMulticast",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::SequentialMulticast/version::1.1.0",
+      "subActivityType": "parallel"
+    }
+  },
+  "join": {
+    "tag": "parallelGateway",
+    "properties": {
+      "componentVersion": "1.0",
+      "activityType": "Join",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::Join/version::1.0.0",
+      "subActivityType": "parallel"
+    }
+  },
+  "jsonToXml": {
+    "tag": "callActivity",
+    "properties": {
+      "additionalRootElementName": "root",
+      "jsonNamespaceMapping": "",
+      "componentVersion": "1.1",
+      "activityType": "JsonToXmlConverter",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::JsonToXmlConverter/version::1.1.2",
+      "useNamespaces": "true",
+      "addXMLRootElement": "true",
+      "additionalRootElementNamespace": "",
+      "jsonNamespaceSeparator": ":"
+    }
+  },
+  "processCall": {
+    "tag": "callActivity",
+    "properties": {
+      "processId": "",
+      "componentVersion": "1.0",
+      "activityType": "ProcessCallElement",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::NonLoopingProcess/version::1.0.3",
+      "subActivityType": "NonLoopingProcess"
+    }
+  },
+  "localProcess": {
+    "tag": "process",
+    "properties": {
+      "transactionTimeout": "30",
+      "processType": "directCall",
+      "componentVersion": "1.1",
+      "cmdVariantUri": "ctype::FlowElementVariant/cname::LocalIntegrationProcess/version::1.1.3",
+      "transactionalHandling": "From Calling Process"
+    }
+  },
+  "timerDefinition": {
+    "tag": "timerEventDefinition",
+    "properties": {
+      "scheduleKey": "<row><cell>dateType</cell><cell></cell></row><row><cell>timeType</cell><cell></cell></row><row><cell>dayValue</cell><cell></cell></row><row><cell>monthValue</cell><cell></cell></row><row><cell>yearValue</cell><cell></cell></row><row><cell>onWeekly</cell><cell></cell></row><row><cell>onMonthly</cell><cell></cell></row><row><cell>OnEveryMinute</cell><cell></cell></row><row><cell>fromInterval</cell><cell></cell></row><row><cell>toInterval</cell><cell></cell></row><row><cell>timeZone</cell><cell>( UTC 0:00 ) Greenwich Mean Time(Etc/GMT)</cell></row><row><cell>secondValue</cell><cell>0</cell></row><row><cell>minutesValue</cell><cell></cell></row><row><cell>hourValue</cell><cell></cell></row><row><cell>triggerType</cell><cell>simple</cell></row><row><cell>noOfSchedules</cell><cell>1</cell></row><row><cell>schedule1</cell><cell>fireNow=true</cell></row>",
+      "componentVersion": "1.4",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::intermediatetimer/version::1.4.0",
+      "activityType": "StartTimerEvent"
+    }
+  },
+  "jmsReceiver": {
+    "tag": "messageFlow",
+    "properties": {
+      "ComponentType": "JMS",
+      "Description": "",
+      "ComponentNS": "sap",
+      "componentVersion": "1.5",
+      "UseMessageCompression": "false",
+      "Name": "JMS",
+      "TransportProtocolVersion": "1.5.0",
+      "ComponentSWCVName": "external",
+      "QueueName_outbound": "",
+      "system": "",
+      "EncryptMessage": "false",
+      "RetentionThresholdAlerting": "2",
+      "ExpirationPeriod": "30",
+      "TransportProtocol": "Not Applicable",
+      "cmdVariantUri": "ctype::AdapterVariant/cname::sap:JMS/tp::Not Applicable/mp::Not Applicable/direction::Receiver/version::1.5.0",
+      "TransferExchangeProperties": "true",
+      "MessageProtocol": "Not Applicable",
+      "MessageProtocolVersion": "1.5.0",
+      "ComponentSWCVId": "1.5.0",
+      "direction": "Receiver"
+    }
+  },
+  "sftpReceiver": {
+    "tag": "messageFlow",
+    "properties": {
+      "disconnect": "0",
+      "fileName": "",
+      "Description": "",
+      "maximumReconnectAttempts": "3",
+      "stepwise": "1",
+      "fileExist": "Override",
+      "ComponentNS": "sap",
+      "autoCreate": "1",
+      "privateKeyAlias": "",
+      "location_id": "",
+      "Name": "SFTP",
+      "TransportProtocolVersion": "1.18.0",
+      "flatten": "0",
+      "sftpSecEnabled": "1",
+      "useTempFile": "0",
+      "ComponentSWCVName": "external",
+      "path": "",
+      "proxyPort": "8080",
+      "host": "",
+      "connectTimeout": "10000",
+      "fastExistsCheck": "1",
+      "MessageProtocol": "File",
+      "ComponentSWCVId": "1.18.0",
+      "direction": "Receiver",
+      "authentication": "user_password",
+      "ComponentType": "SFTP",
+      "fileAppendTimeStamp": "0",
+      "credential_name": "",
+      "proxyProtocol": "socks5",
+      "proxyType": "none",
+      "proxyAlias": "",
+      "componentVersion": "1.13",
+      "reconnectDelay": "1000",
+      "proxyHost": "",
+      "system": "",
+      "tempFileName": "${file:name}.tmp",
+      "allowDeprecatedAlgorithms": "0",
+      "TransportProtocol": "SFTP",
+      "cmdVariantUri": "ctype::AdapterVariant/cname::sap:SFTP/tp::SFTP/mp::File/direction::Receiver/version::1.13.3",
+      "MessageProtocolVersion": "1.18.0",
+      "username": ""
+    }
+  },
+  "sftpSender": {
+    "tag": "messageFlow",
+    "properties": {
+      "disconnect": "0",
+      "fileName": "",
+      "Description": "",
+      "maximumReconnectAttempts": "3",
+      "stepwise": "0",
+      "ComponentNS": "sap",
+      "privateKeyAlias": "",
+      "location_id": "",
+      "recursive": "0",
+      "Name": "SFTP",
+      "TransportProtocolVersion": "1.7.1",
+      "ComponentSWCVName": "external",
+      "path": "",
+      "proxyPort": "8080",
+      "noop": "delete",
+      "doneFileName": "",
+      "file.move": "",
+      "host": "",
+      "connectTimeout": "10000",
+      "fastExistsCheck": "1",
+      "MessageProtocol": "File",
+      "ComponentSWCVId": "1.7.1",
+      "direction": "Sender",
+      "authentication": "user_password",
+      "ComponentType": "PollingSFTP",
+      "credential_name": "",
+      "proxyProtocol": "socks5",
+      "readLock": "none",
+      "proxyType": "none",
+      "proxyAlias": "",
+      "componentVersion": "1.7",
+      "reconnectDelay": "1000",
+      "proxyHost": "",
+      "system": "",
+      "allowDeprecatedAlgorithms": "0",
+      "TransportProtocol": "SFTP",
+      "cmdVariantUri": "ctype::AdapterVariant/cname::sap:PollingSFTP/tp::SFTP/mp::File/direction::Sender/version::1.7.1",
+      "MessageProtocolVersion": "1.7.1",
+      "username": ""
+    }
+  },
+  "odataV2Receiver": {
+    "tag": "messageFlow",
+    "properties": {
+      "Description": "",
+      "pagination": "0",
+      "odataCertAuthPrivateKeyAlias": "",
+      "ComponentNS": "sap",
+      "resourcePath": "",
+      "customQueryOptions": "",
+      "metadataAllowedURIParams": "",
+      "Name": "OData",
+      "TransportProtocolVersion": "1.20.0",
+      "ComponentSWCVName": "external",
+      "proxyPort": "",
+      "receiveTimeOut": "60",
+      "alias": "",
+      "contentType": "application/atom+xml",
+      "MessageProtocol": "OData V2",
+      "ComponentSWCVId": "1.20.0",
+      "direction": "Receiver",
+      "scc_location_id": "",
+      "metadataAllowedHeaders": "",
+      "ComponentType": "HCIOData",
+      "address": "",
+      "queryOptions": "",
+      "proxyType": "default",
+      "isCSRFEnabled": "true",
+      "componentVersion": "1.20",
+      "proxyHost": "",
+      "edmxFilePath": "",
+      "odatapagesize": "",
+      "system": "",
+      "authenticationMethod": "None",
+      "whitelistResponseHeaders": "",
+      "enableBatchProcessing": "0",
+      "TransportProtocol": "HTTP",
+      "cmdVariantUri": "ctype::AdapterVariant/cname::sap:HCIOData/tp::HTTP/mp::OData V2/direction::Receiver/version::1.20.0",
+      "fields": "",
+      "characterEncoding": "none",
+      "whitelistRequestHeaders": "",
+      "operation": "Query(GET)",
+      "MessageProtocolVersion": "1.20.0"
+    }
+  },
+  "send": {
+    "tag": "serviceTask",
+    "properties": {
+      "componentVersion": "1.0",
+      "activityType": "Send",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::Send/version::1.0.4"
+    }
+  }
+}

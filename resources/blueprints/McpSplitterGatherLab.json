@@ -1,0 +1,48 @@
+{
+  "id": "McpSplitterGatherLab",
+  "name": "McpSplitterGatherLab",
+  "endpoint": "/mcp/McpSplitterGatherLab",
+  "nodes": [
+    {
+      "id": "Start",
+      "name": "Start",
+      "type": "start"
+    },
+    {
+      "id": "Split",
+      "name": "Split",
+      "type": "generalSplitter",
+      "properties": {
+        "splitExprValue": "//item"
+      }
+    },
+    {
+      "id": "Gather",
+      "name": "Gather",
+      "type": "gather",
+      "properties": {}
+    },
+    {
+      "id": "End",
+      "name": "End",
+      "type": "end"
+    }
+  ],
+  "edges": [
+    {
+      "id": "F0",
+      "source": "Start",
+      "target": "Split"
+    },
+    {
+      "id": "F1",
+      "source": "Split",
+      "target": "Gather"
+    },
+    {
+      "id": "F2",
+      "source": "Gather",
+      "target": "End"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "id": "McpJmsReceiverLab",
+  "name": "McpJmsReceiverLab",
+  "endpoint": "/mcp/McpJmsReceiverLab",
+  "nodes": [
+    {
+      "id": "Start",
+      "name": "Start",
+      "type": "start",
+      "x": 200,
+      "y": 170
+    },
+    {
+      "id": "Publish",
+      "name": "Publish",
+      "type": "send",
+      "properties": {},
+      "receiver": {
+        "type": "jms",
+        "queue": "McpComponentLabQueue",
+        "name": "QueueReceiver"
+      }
+    },
+    {
+      "id": "End",
+      "name": "End",
+      "type": "end",
+      "x": 1100,
+      "y": 170
+    }
+  ],
+  "edges": [
+    {
+      "id": "F0",
+      "source": "Start",
+      "target": "Publish"
+    },
+    {
+      "id": "F1",
+      "source": "Publish",
+      "target": "End"
+    }
+  ]
+}

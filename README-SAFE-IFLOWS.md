@@ -60,14 +60,14 @@ Xem JSON chạy được trong `resources/blueprints/`:
 - `McpHttpReceiverLab.blueprint.json`: Request-Reply/HTTPS receiver và Exception Subprocess; receiver dùng `https://example.com/` với dữ liệu test tổng hợp.
 - `McpUnicodeBundleLab.blueprint.json`: Unicode trong nội dung và tên bundle ASCII dài cần fold manifest.
 
-Hỗ trợ `start`, `end`, `contentModifier`, `groovy`, `router`, `xmlToJson`, `messageMapping`, `requestReply`, cùng `exceptionHandler`. Graph tối đa 100 nodes/200 edges. Các kiểu ngoài danh sách này vẫn cần template SAP phù hợp và `update-iflow`; không coi chúng đã được kiểm chứng bởi compiler này.
+Hỗ trợ `start`, `end`, `contentModifier`, `groovy`, `router`, `xmlToJson`, `jsonToXml`, `messageMapping`, `generalSplitter`, `gather`, `multicast`, `sequentialMulticast`, `join`, `processCall`, `requestReply`, `send`, cùng `exceptionHandler`. Có HTTPS/Timer/SFTP sender, HTTP/JMS/SFTP/OData V2 receiver và `localProcesses`. Xem [bảng cấu hình và giới hạn từng thành phần](BLUEPRINT-COMPONENTS.md). Giới hạn 100 nodes/200 edges áp dụng trên toàn bundle. Các kiểu ngoài danh sách vẫn cần template SAP phù hợp và chưa được kiểm chứng bởi compiler này.
 
 Các quy tắc quan trọng:
 
 - Artifact ID/node ID/edge ID phải hợp lệ, duy nhất. Một start; có end; mọi node phải reachable và có đường tới end.
 - Router có đúng một default branch; các branch còn lại có condition.
 - Tên artifact theo ràng buộc SAP (ASCII letters/numbers/underscore/space/period/hyphen, không kết thúc bằng period). Nội dung payload vẫn hỗ trợ Unicode.
-- Tên receiver không có khoảng trắng. Receiver chỉ HTTPS, không đặt credentials vào URL.
+- Tên receiver không có khoảng trắng. HTTP/OData receiver yêu cầu HTTPS và không đặt credentials vào URL; JMS/SFTP có cấu hình riêng trong bảng thành phần.
 - Cung cấp script dưới `src/main/resources/script/` và mapping/XSD tương ứng. Metadata component được lấy từ template SAP, không tự đoán phiên bản.
 - `x/y` là tọa độ tùy chọn để bố trí nhánh. Compiler tự sinh BPMN shapes, bounds, edges, waypoints và references.
 - HTTPS sender mặc định bật CSRF. `SAP_ApplicationID` được allow để test correlation; nếu bạn thay allowlist, phải giữ cơ chế correlation phù hợp.
@@ -88,7 +88,7 @@ Các quy tắc quan trọng:
 
 ## Kết quả test
 
-Bản này đã qua 56 unit tests (10 suites), TypeScript build và kiểm tra trực tiếp bốn flow mẫu: SAP validation Passed, deployment SUCCESS, runtime STARTED và mở được trong graphical editor. Đây chưa phải xác nhận payload chạy đúng: 10 tình huống runtime còn chưa được xác minh vì key hiện có nhận HTTP 401 ở runtime. Cần cấu hình `CPI_OAUTH_*` có quyền gửi message rồi chạy matrix bên dưới.
+Bản gốc mở rộng đã qua 56 unit tests (10 suites) và kiểm tra bốn flow cũ trong graphical editor. Sau khi bổ sung các thành phần mới, bộ offline có 75 tests (11 suites) pass, TypeScript build pass, chín flow mẫu mới qua SAP validation; năm flow nội bộ qua deployment SUCCESS và runtime STARTED. Các thành phần mới chưa được kiểm tra trong graphical editor. Đây chưa phải xác nhận payload chạy đúng: matrix HTTP runtime vẫn chưa được xác minh do thiếu key runtime phù hợp; JMS/SFTP/OData chưa được test với hệ thống đích. Xem [chi tiết bằng chứng và giới hạn](BLUEPRINT-COMPONENTS.md). Cần cấu hình `CPI_OAUTH_*` có quyền gửi message rồi chạy matrix bên dưới.
 
 `test-iflow` chỉ gửi payload một lần. Không retry nghiệp vụ sau timeout. Kết quả:
 

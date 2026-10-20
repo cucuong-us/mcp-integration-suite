@@ -1,0 +1,52 @@
+{
+  "id": "McpODataV2ReceiverLab",
+  "name": "McpODataV2ReceiverLab",
+  "endpoint": "/mcp/McpODataV2ReceiverLab",
+  "nodes": [
+    {
+      "id": "Start",
+      "name": "Start",
+      "type": "start",
+      "x": 200,
+      "y": 170
+    },
+    {
+      "id": "ReadProducts",
+      "name": "ReadProducts",
+      "type": "requestReply",
+      "properties": {},
+      "receiver": {
+        "type": "odataV2",
+        "url": "https://example.com/odata/",
+        "resourcePath": "Products",
+        "edmx": "src/main/resources/edmx/sample.edmx",
+        "queryOptions": "$top=1"
+      }
+    },
+    {
+      "id": "End",
+      "name": "End",
+      "type": "end",
+      "x": 1100,
+      "y": 170
+    }
+  ],
+  "edges": [
+    {
+      "id": "F0",
+      "source": "Start",
+      "target": "ReadProducts"
+    },
+    {
+      "id": "F1",
+      "source": "ReadProducts",
+      "target": "End"
+    }
+  ],
+  "resources": [
+    {
+      "path": "src/main/resources/edmx/sample.edmx",
+      "content": "<?xml version=\"1.0\" encoding=\"utf-8\"?><edmx:Edmx Version=\"1.0\" xmlns:edmx=\"http://schemas.microsoft.com/ado/2007/06/edmx\"><edmx:DataServices xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" m:DataServiceVersion=\"2.0\"><Schema Namespace=\"McpSample\" xmlns=\"http://schemas.microsoft.com/ado/2008/09/edm\"><EntityType Name=\"Product\"><Key><PropertyRef Name=\"ID\"/></Key><Property Name=\"ID\" Type=\"Edm.String\" Nullable=\"false\"/><Property Name=\"Name\" Type=\"Edm.String\"/></EntityType><EntityContainer Name=\"SampleContainer\" m:IsDefaultEntityContainer=\"true\"><EntitySet Name=\"Products\" EntityType=\"McpSample.Product\"/></EntityContainer></Schema></edmx:DataServices></edmx:Edmx>"
+    }
+  ]
+}

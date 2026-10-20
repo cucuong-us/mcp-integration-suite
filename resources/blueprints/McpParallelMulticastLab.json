@@ -1,0 +1,105 @@
+{
+  "id": "McpParallelMulticastLab",
+  "name": "McpParallelMulticastLab",
+  "endpoint": "/mcp/McpParallelMulticastLab",
+  "nodes": [
+    {
+      "id": "Start",
+      "name": "Start",
+      "type": "start",
+      "x": 200,
+      "y": 170
+    },
+    {
+      "id": "FanOut",
+      "name": "FanOut",
+      "type": "multicast",
+      "properties": {},
+      "joinId": "Join",
+      "x": 350,
+      "y": 170
+    },
+    {
+      "id": "BranchA",
+      "name": "BranchA",
+      "type": "contentModifier",
+      "properties": {
+        "bodyType": "constant",
+        "wrapContent": "A"
+      },
+      "x": 500,
+      "y": 170
+    },
+    {
+      "id": "BranchB",
+      "name": "BranchB",
+      "type": "contentModifier",
+      "properties": {
+        "bodyType": "constant",
+        "wrapContent": "B"
+      },
+      "x": 650,
+      "y": 280
+    },
+    {
+      "id": "Join",
+      "name": "Join",
+      "type": "join",
+      "properties": {},
+      "x": 800,
+      "y": 170
+    },
+    {
+      "id": "Gather",
+      "name": "Gather",
+      "type": "gather",
+      "properties": {},
+      "x": 950,
+      "y": 170
+    },
+    {
+      "id": "End",
+      "name": "End",
+      "type": "end",
+      "x": 1100,
+      "y": 170
+    }
+  ],
+  "edges": [
+    {
+      "id": "F0",
+      "source": "Start",
+      "target": "FanOut"
+    },
+    {
+      "id": "F1",
+      "source": "FanOut",
+      "target": "BranchA"
+    },
+    {
+      "id": "F2",
+      "source": "FanOut",
+      "target": "BranchB"
+    },
+    {
+      "id": "F3",
+      "source": "BranchA",
+      "target": "Join"
+    },
+    {
+      "id": "F4",
+      "source": "BranchB",
+      "target": "Join"
+    },
+    {
+      "id": "F5",
+      "source": "Join",
+      "target": "Gather"
+    },
+    {
+      "id": "F6",
+      "source": "Gather",
+      "target": "End"
+    }
+  ]
+}

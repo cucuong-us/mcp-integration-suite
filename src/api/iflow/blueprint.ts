@@ -3,7 +3,6 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import AdmZip from "adm-zip";
 import { globSync } from "glob";
-import { z } from "zod";
 import { elements, requireValidDesign } from "../../utils/designValidation";
 const B = "http://www.omg.org/spec/BPMN/20100524/MODEL";
 const D = "http://www.omg.org/spec/BPMN/20100524/DI";
@@ -11,10 +10,6 @@ const C = "http://www.omg.org/spec/DD/20100524/DC";
 const I = "http://www.omg.org/spec/DD/20100524/DI";
 const F = "http:///com.sap.ifl.model/Ifl.xsd";
 const root = path.resolve(__dirname, "../../../resources");
-const safeId = z
-  .string()
-  .regex(/^[A-Za-z_][A-Za-z0-9_]*$/)
-  .max(120);
 function foldManifest(text: string): string {
   return (
     text
@@ -37,99 +32,19 @@ function foldManifest(text: string): string {
       .replace(/\r\n*$/, "") + "\r\n\r\n"
   );
 }
-export const blueprintSchema = z
-  .object({
-    id: safeId,
-    name: z
-      .string()
-      .min(1)
-      .max(200)
-      .regex(
-        /^[A-Za-z_][A-Za-z0-9_. -]*$/,
-        "SAP artifact name permits ASCII letters, numbers, underscore, spaces, period and hyphen only",
-      )
-      .refine(
-        (n) => !n.endsWith(".") && n === n.trim(),
-        "Name cannot end with a period or whitespace",
-      ),
-    endpoint: z.string().regex(/^\/[A-Za-z0-9_./-]+$/),
-    csrfProtected: z.boolean().default(true),
-    allowedHeaders: z
-      .array(z.string().regex(/^[A-Za-z0-9_-]+$/))
-      .default(["SAP_ApplicationID"]),
-    nodes: z
-      .array(
-        z
-          .object({
-            id: safeId,
-            name: z.string().min(1),
-            type: z.enum([
-              "start",
-              "end",
-              "contentModifier",
-              "groovy",
-              "router",
-              "xmlToJson",
-              "messageMapping",
-              "requestReply",
-            ]),
-            receiver: z
-              .object({
-                url: z.string().url(),
-                method: z.enum(["GET", "POST", "PUT", "DELETE"]).default("GET"),
-                name: z
-                  .string()
-                  .regex(
-                    /^[A-Za-z_][A-Za-z0-9_.-]*$/,
-                    "SAP receiver name cannot contain spaces",
-                  )
-                  .default("HTTPReceiver"),
-              })
-              .strict()
-              .optional(),
-            properties: z.record(z.string()).default({}),
-            x: z.number().finite().nonnegative().optional(),
-            y: z.number().finite().nonnegative().optional(),
-          })
-          .strict(),
-      )
-      .min(2)
-      .max(100),
-    edges: z
-      .array(
-        z
-          .object({
-            id: safeId,
-            source: safeId,
-            target: safeId,
-            condition: z.string().optional(),
-            default: z.boolean().default(false),
-            expressionType: z.enum(["XML", "NonXML"]).default("NonXML"),
-          })
-          .strict(),
-      )
-      .min(1)
-      .max(200),
-    resources: z
-      .array(
-        z
-          .object({
-            path: z.string().regex(/^src\/main\/resources\//),
-            content: z.string(),
-          })
-          .strict(),
-      )
-      .default([]),
-    exceptionHandler: z
-      .object({
-        script: z.string().regex(/^[A-Za-z0-9_.-]+\.groovy$/),
-        name: z.string().default("Handle Exception"),
-      })
-      .strict()
-      .optional(),
-  })
-  .strict();
-export type Blueprint = z.input<typeof blueprintSchema>;
+import {
+  blueprintSchema,
+  Blueprint,
+  validateBlueprintGraph,
+} from "./blueprintSchema";
+export { blueprintSchema } from "./blueprintSchema";
+export type { Blueprint } from "./blueprintSchema";
+const extendedTemplates: Record<
+  string,
+  { tag: string; properties: Record<string, string> }
+> = JSON.parse(
+  readFileSync(path.join(root, "component-templates/extended.json"), "utf8"),
+);
 const donors: Record<string, [string, string]> = {
   start: ["helpers/if_echo_mapping/**/*.iflw", "StartEvent_2"],
   end: ["helpers/if_echo_mapping/**/*.iflw", "EndEvent_2"],
@@ -164,12 +79,39 @@ const donors: Record<string, [string, string]> = {
     "examples/iflows/if_google_ads_campaigns/**/*.iflw",
     "SubProcess_456",
   ],
+  localStart: [
+    "examples/iflows/if_google_ads_campaigns/**/*.iflw",
+    "StartEvent_554893",
+  ],
+  localEnd: [
+    "examples/iflows/if_google_ads_campaigns/**/*.iflw",
+    "EndEvent_554894",
+  ],
   errorStart: [
     "examples/iflows/if_google_ads_campaigns/**/*.iflw",
     "StartEvent_457",
   ],
 };
 function donor(type: string): Element {
+  if (extendedTemplates[type]) {
+    const template = extendedTemplates[type];
+    const doc = new DOMParser().parseFromString(
+      `<bpmn2:${template.tag} xmlns:bpmn2="${B}" xmlns:ifl="${F}"><bpmn2:extensionElements/></bpmn2:${template.tag}>`,
+      "application/xml",
+    );
+    const ext = doc.documentElement!.firstChild!;
+    for (const [key, value] of Object.entries(template.properties)) {
+      const p = doc.createElementNS(F, "ifl:property"),
+        k = doc.createElement("key"),
+        v = doc.createElement("value");
+      k.textContent = key;
+      v.textContent = value;
+      p.appendChild(k);
+      p.appendChild(v);
+      ext.appendChild(p);
+    }
+    return doc.documentElement!;
+  }
   const [pattern, id] = donors[type];
   const files = globSync(pattern, { cwd: root, absolute: true });
   if (files.length !== 1)
@@ -184,92 +126,58 @@ function donor(type: string): Element {
 }
 export function compileBlueprint(input: Blueprint) {
   const bp = blueprintSchema.parse(input);
-  const nodes = new Map(bp.nodes.map((n) => [n.id, n]));
-  const ids = [...bp.nodes.map((n) => n.id), ...bp.edges.map((e) => e.id)];
-  if (new Set(ids).size !== ids.length)
-    throw new Error("Node/edge IDs must be unique");
-  if (
-    ids.some(
-      (id) =>
-        [
-          "Definitions_1",
-          "Collaboration_1",
-          "Participant_1",
-          "Participant_Process_1",
-          "Process_1",
-          "MessageFlow_4",
-          "BPMNDiagram_1",
-          "BPMNPlane_1",
-        ].includes(id) ||
-        /^(DI_|Exception_|Receiver_|Channel_|Condition_)/.test(id),
-    )
-  )
-    throw new Error("Reserved diagram ID");
-  const starts = bp.nodes.filter((n) => n.type === "start");
-  if (starts.length !== 1 || !bp.nodes.some((n) => n.type === "end"))
-    throw new Error("One start and at least one end are required");
-  for (const e of bp.edges)
-    if (!nodes.has(e.source) || !nodes.has(e.target))
-      throw new Error("Edge references unknown node: " + e.id);
-  for (const n of bp.nodes) {
-    if ((n.type === "requestReply") !== !!n.receiver)
-      throw new Error(
-        "Receiver configuration is required only for requestReply: " + n.id,
-      );
-    if (n.receiver) {
-      const url = new URL(n.receiver.url);
-      if (url.protocol !== "https:" || url.username || url.password)
-        throw new Error("Receiver requires HTTPS and no embedded credentials");
+  validateBlueprintGraph(bp);
+  // SAP validation accepted arbitrary IDs but the tested tenant emitted an
+  // empty local Camel route. Follow the naming used by exported SAP models.
+  const idMap = new Map<string, string>();
+  for (const local of bp.localProcesses) {
+    idMap.set(local.id, "Process_Local_" + local.id);
+    for (const node of local.nodes) {
+      const prefix =
+        node.type === "start"
+          ? "StartEvent"
+          : node.type === "end"
+            ? "EndEvent"
+            : node.type === "router"
+              ? "ExclusiveGateway"
+              : ["multicast", "sequentialMulticast", "join"].includes(node.type)
+                ? "ParallelGateway"
+                : ["send", "requestReply"].includes(node.type)
+                  ? "ServiceTask"
+                  : "CallActivity";
+      idMap.set(node.id, prefix + "_Local_" + node.id);
     }
-    const outgoing = bp.edges.filter((e) => e.source === n.id),
-      incoming = bp.edges.filter((e) => e.target === n.id);
-    if (
-      n.type === "start"
-        ? incoming.length !== 0 || outgoing.length !== 1
-        : n.type === "end"
-          ? outgoing.length !== 0 || !incoming.length
-          : !incoming.length || !outgoing.length
-    )
-      throw new Error("Invalid connections for " + n.id);
-    if (n.type === "router") {
-      if (
-        outgoing.length < 2 ||
-        outgoing.filter((e) => e.default).length !== 1 ||
-        outgoing.some((e) => !e.default && !e.condition)
-      )
-        throw new Error(
-          "Router requires one default and conditions for other branches: " +
-            n.id,
-        );
-    } else if (n.type !== "end" && outgoing.length !== 1)
-      throw new Error("Use router for branching: " + n.id);
-    if (outgoing.some((e) => e.default || e.condition) && n.type !== "router")
-      throw new Error("Conditions/default only supported on router edges");
+    for (const edge of local.edges)
+      idMap.set(edge.id, "SequenceFlow_Local_" + edge.id);
   }
-  const reachable = (startIds: string[], reverse: boolean) => {
-    const visited = new Set(startIds),
-      queue = [...startIds];
-    while (queue.length) {
-      const current = queue.shift();
-      for (const e of bp.edges)
-        if ((reverse ? e.target : e.source) === current) {
-          const target = reverse ? e.source : e.target;
-          if (!visited.has(target)) {
-            visited.add(target);
-            queue.push(target);
-          }
-        }
+  for (const graph of [
+    { id: "Process_1", nodes: bp.nodes, edges: bp.edges },
+    ...bp.localProcesses,
+  ]) {
+    graph.id = idMap.get(graph.id) || graph.id;
+    for (const node of graph.nodes) {
+      node.id = idMap.get(node.id) || node.id;
+      if (node.processId)
+        node.processId = idMap.get(node.processId) || node.processId;
+      if (node.joinId) node.joinId = idMap.get(node.joinId) || node.joinId;
     }
-    return visited;
-  };
-  if (
-    reachable([starts[0].id], false).size !== bp.nodes.length ||
-    reachable(
-      bp.nodes.filter((n) => n.type === "end").map((n) => n.id),
-      true,
-    ).size !== bp.nodes.length
-  )
-    throw new Error("All nodes must be reachable and have a path to an end");
+    for (const edge of graph.edges) {
+      edge.id = idMap.get(edge.id) || edge.id;
+      edge.source = idMap.get(edge.source) || edge.source;
+      edge.target = idMap.get(edge.target) || edge.target;
+    }
+  }
+  const graphs = [
+    { id: "Process_1", name: bp.name, nodes: bp.nodes, edges: bp.edges },
+    ...bp.localProcesses,
+  ];
+  const allNodes = graphs.flatMap((g) => g.nodes);
+  const allEdges = graphs.flatMap((g) => g.edges);
+  const nodes = new Map(allNodes.map((n) => [n.id, n]));
+  const owner = new Map(
+    graphs.flatMap((g) => g.nodes.map((n) => [n.id, g.id] as const)),
+  );
+  const starts = bp.nodes.filter((n) => n.type === "start");
   const zip = new AdmZip();
   zip.addLocalFolder(path.join(root, "helpers/if_echo_mapping"));
   const modelPath =
@@ -312,9 +220,39 @@ export function compileBlueprint(input: Blueprint) {
     }
     prop.getElementsByTagName("value")[0].textContent = value;
   };
+  const collaboration = elements(doc, B, "collaboration")[0];
+  const processes = new Map<string, Element>([["Process_1", process]]);
+  for (const local of bp.localProcesses) {
+    const p = doc.importNode(donor("localProcess"), true) as Element;
+    p.setAttribute("id", local.id);
+    p.setAttribute("name", local.name);
+    doc.documentElement!.insertBefore(p, process.nextSibling);
+    processes.set(local.id, p);
+    const pool = doc.importNode(
+      elements(doc, B, "participant").find(
+        (e) => e.getAttribute("id") === "Participant_Process_1",
+      )!,
+      true,
+    ) as Element;
+    pool.setAttribute("id", "Local_" + local.id);
+    pool.setAttribute("name", local.name);
+    pool.setAttribute("processRef", local.id);
+    collaboration.appendChild(pool);
+  }
   const nodeElements = new Map<string, Element>();
-  for (const n of bp.nodes) {
-    const e = doc.importNode(donor(n.type), true) as Element;
+  for (const n of allNodes) {
+    const e = doc.importNode(
+      donor(
+        n.type === "start" &&
+          (owner.get(n.id) !== "Process_1" || bp.sender.type === "timer")
+          ? "localStart"
+          : n.type === "end" &&
+              (owner.get(n.id) !== "Process_1" || bp.sender.type !== "https")
+            ? "localEnd"
+            : n.type,
+      ),
+      true,
+    ) as Element;
     e.setAttribute("id", n.id);
     e.setAttribute("name", n.name);
     e.removeAttribute("default");
@@ -322,6 +260,27 @@ export function compileBlueprint(input: Blueprint) {
       if (["incoming", "outgoing"].includes((child as Element).localName || ""))
         e.removeChild(child);
     if (n.type === "groovy") property(e, "scriptBundleId", "");
+    if (n.type === "processCall") property(e, "processId", n.processId!);
+    if (n.type === "sequentialMulticast")
+      property(
+        e,
+        "routingSequenceTable",
+        allEdges
+          .filter((f) => f.source === n.id)
+          .map((f, i) => `<row><cell>${i + 1}</cell><cell>${f.id}</cell></row>`)
+          .join(""),
+      );
+    if (
+      n.type === "start" &&
+      owner.get(n.id) === "Process_1" &&
+      bp.sender.type === "timer"
+    ) {
+      const timer = doc.importNode(donor("timerDefinition"), true) as Element;
+      timer.setAttribute("id", "Timer_" + n.id);
+      if (bp.sender.scheduleKey)
+        property(timer, "scheduleKey", bp.sender.scheduleKey);
+      e.appendChild(timer);
+    }
     for (const [key, value] of Object.entries(n.properties)) {
       if (
         [
@@ -329,12 +288,15 @@ export function compileBlueprint(input: Blueprint) {
           "componentVersion",
           "activityType",
           "subActivityType",
+          "processId",
+          "routingSequenceTable",
+          "scheduleKey",
         ].includes(key)
       )
         throw new Error("Component identity cannot be overridden: " + key);
       property(e, key, value);
     }
-    for (const edge of bp.edges) {
+    for (const edge of allEdges) {
       if (edge.target === n.id)
         make(B, "bpmn2:incoming", {}, e).textContent = edge.id;
       if (edge.source === n.id)
@@ -342,10 +304,10 @@ export function compileBlueprint(input: Blueprint) {
       if (edge.source === n.id && edge.default)
         e.setAttribute("default", edge.id);
     }
-    process.appendChild(e);
+    processes.get(owner.get(n.id)!)!.appendChild(e);
     nodeElements.set(n.id, e);
   }
-  for (const edge of bp.edges) {
+  for (const edge of allEdges) {
     const e =
       nodes.get(edge.source)?.type === "router"
         ? (doc.importNode(donor("route"), true) as Element)
@@ -354,6 +316,13 @@ export function compileBlueprint(input: Blueprint) {
     e.setAttribute("sourceRef", edge.source);
     e.setAttribute("targetRef", edge.target);
     e.removeAttribute("name");
+    if (
+      edge.name ||
+      ["multicast", "sequentialMulticast"].includes(
+        nodes.get(edge.source)!.type,
+      )
+    )
+      e.setAttribute("name", edge.name || edge.id);
     if (nodes.get(edge.source)?.type === "router")
       property(e, "expressionType", edge.expressionType);
     if (edge.condition) {
@@ -370,16 +339,38 @@ export function compileBlueprint(input: Blueprint) {
       );
       c.textContent = edge.condition;
     }
-    process.appendChild(e);
+    processes.get(owner.get(edge.source)!)!.appendChild(e);
   }
   const sender = elements(doc, B, "messageFlow")[0];
   sender.setAttribute("targetRef", starts[0].id);
-  property(sender, "urlPath", bp.endpoint);
+  property(sender, "urlPath", bp.endpoint || "");
   property(sender, "xsrfProtection", bp.csrfProtected ? "1" : "0");
-  const collaboration = elements(doc, B, "collaboration")[0];
+  if (bp.sender.type === "timer") {
+    collaboration.removeChild(sender);
+    const participant = elements(collaboration, B, "participant").find(
+      (e) => e.getAttribute("id") === "Participant_1",
+    );
+    if (participant) collaboration.removeChild(participant);
+  } else if (bp.sender.type === "sftp") {
+    const channel = doc.importNode(donor("sftpSender"), true) as Element;
+    channel.setAttribute("id", "MessageFlow_4");
+    channel.setAttribute("sourceRef", "Participant_1");
+    channel.setAttribute("targetRef", starts[0].id);
+    for (const [key, value] of Object.entries({
+      host: bp.sender.host,
+      path: bp.sender.directory,
+      fileName: bp.sender.fileName,
+      credential_name: bp.sender.credentialName,
+      system: "Sender",
+      scheduleKey: bp.sender.scheduleKey,
+      noop: bp.sender.postProcessing,
+    }))
+      property(channel, key, value);
+    collaboration.replaceChild(channel, sender);
+  }
   property(collaboration, "allowedHeaderList", bp.allowedHeaders.join("|"));
   const receiverEdges: { id: string; source: string; target: string }[] = [];
-  for (const n of bp.nodes.filter((n) => n.receiver)) {
+  for (const n of allNodes.filter((n) => n.receiver)) {
     const receiver = doc.importNode(
       donor("receiverParticipant"),
       true,
@@ -387,7 +378,18 @@ export function compileBlueprint(input: Blueprint) {
     receiver.setAttribute("id", "Receiver_" + n.id);
     receiver.setAttribute("name", n.receiver!.name);
     collaboration.appendChild(receiver);
-    const channel = doc.importNode(donor("httpReceiver"), true) as Element;
+    const channel = doc.importNode(
+      donor(
+        n.receiver!.type === "jms"
+          ? "jmsReceiver"
+          : n.receiver!.type === "sftp"
+            ? "sftpReceiver"
+            : n.receiver!.type === "odataV2"
+              ? "odataV2Receiver"
+              : "httpReceiver",
+      ),
+      true,
+    ) as Element;
     const edge = {
       id: "Channel_" + n.id,
       source: n.id,
@@ -397,16 +399,41 @@ export function compileBlueprint(input: Blueprint) {
     channel.setAttribute("id", edge.id);
     channel.setAttribute("sourceRef", edge.source);
     channel.setAttribute("targetRef", edge.target);
-    const url = new URL(n.receiver!.url);
-    property(channel, "httpAddressWithoutQuery", url.origin + url.pathname);
-    property(channel, "httpAddressQuery", url.search.slice(1));
-    property(channel, "httpMethod", n.receiver!.method);
-    property(channel, "system", n.receiver!.name);
-    property(
-      channel,
-      "httpShouldSendBody",
-      n.receiver!.method === "GET" ? "false" : "true",
-    );
+    const config = n.receiver!;
+    channel.setAttribute("name", config.type || "HTTP");
+    property(channel, "system", config.name);
+    if (config.type === "jms")
+      property(channel, "QueueName_outbound", config.queue);
+    else if (config.type === "sftp") {
+      for (const [key, value] of Object.entries({
+        host: config.host,
+        path: config.directory,
+        fileName: config.fileName,
+        credential_name: config.credentialName,
+      }))
+        property(channel, key, value);
+    } else if (config.type === "odataV2") {
+      for (const [key, value] of Object.entries({
+        address: config.url,
+        resourcePath: config.resourcePath,
+        operation: config.operation,
+        queryOptions: config.queryOptions,
+        edmxFilePath: config.edmx.replace("src/main/resources/", ""),
+        authenticationMethod: config.credentialName ? "Basic" : "None",
+        alias: config.credentialName || "",
+      }))
+        property(channel, key, value);
+    } else {
+      const url = new URL(config.url);
+      property(channel, "httpAddressWithoutQuery", url.origin + url.pathname);
+      property(channel, "httpAddressQuery", url.search.slice(1));
+      property(channel, "httpMethod", config.method);
+      property(
+        channel,
+        "httpShouldSendBody",
+        config.method === "GET" ? "false" : "true",
+      );
+    }
     collaboration.appendChild(channel);
   }
   const exceptionEdges: { id: string; source: string; target: string }[] = [];
@@ -471,33 +498,51 @@ export function compileBlueprint(input: Blueprint) {
     string,
     { x: number; y: number; w: number; h: number }
   >();
-  for (const [i, n] of bp.nodes.entries())
+  for (const [i, n] of allNodes.entries())
     coords.set(n.id, {
       x: n.x ?? 200 + i * 150,
-      y: n.y ?? 170,
+      y: n.y ?? 170 + graphs.findIndex((g) => g.id === owner.get(n.id)) * 420,
       w: ["start", "end"].includes(n.type)
         ? 32
-        : n.type === "router"
+        : ["router", "multicast", "sequentialMulticast", "join"].includes(
+              n.type,
+            )
           ? 40
           : 100,
-      h: ["start", "end"].includes(n.type) ? 32 : n.type === "router" ? 40 : 60,
+      h: ["start", "end"].includes(n.type)
+        ? 32
+        : ["router", "multicast", "sequentialMulticast", "join"].includes(
+              n.type,
+            )
+          ? 40
+          : 60,
     });
   if (bp.exceptionHandler) {
-    const y = Math.max(...[...coords.values()].map((c) => c.y + c.h)) + 80;
+    const y =
+      Math.max(
+        ...bp.nodes.map((n) => coords.get(n.id)!).map((c) => c.y + c.h),
+      ) + 80;
     coords.set("Exception_Subprocess", { x: 200, y, w: 480, h: 150 });
     coords.set("Exception_Start", { x: 230, y: y + 60, w: 32, h: 32 });
     coords.set("Exception_Handle", { x: 340, y: y + 45, w: 100, h: 60 });
     coords.set("Exception_End", { x: 570, y: y + 60, w: 32, h: 32 });
   }
-  const width = Math.max(...[...coords.values()].map((c) => c.x + c.w)) + 100;
-  coords.set("Participant_Process_1", {
-    x: 140,
-    y: 90,
-    w: width - 140,
-    h: Math.max(...[...coords.values()].map((c) => c.y + c.h)) + 80,
-  });
-  coords.set("Participant_1", { x: 30, y: 150, w: 80, h: 60 });
-  for (const n of bp.nodes.filter((n) => n.receiver))
+  for (const [index, g] of graphs.entries()) {
+    const bounds = g.nodes.map((n) => coords.get(n.id)!);
+    if (index === 0 && bp.exceptionHandler)
+      bounds.push(coords.get("Exception_Subprocess")!);
+    const x = Math.min(...bounds.map((c) => c.x)) - 60,
+      y = Math.min(...bounds.map((c) => c.y)) - 80;
+    coords.set(index === 0 ? "Participant_Process_1" : "Local_" + g.id, {
+      x,
+      y,
+      w: Math.max(...bounds.map((c) => c.x + c.w)) - x + 100,
+      h: Math.max(...bounds.map((c) => c.y + c.h)) - y + 80,
+    });
+  }
+  if (bp.sender.type !== "timer")
+    coords.set("Participant_1", { x: 30, y: 150, w: 80, h: 60 });
+  for (const n of allNodes.filter((n) => n.receiver))
     coords.set("Receiver_" + n.id, {
       x: coords.get(n.id)!.x,
       y: 0,
@@ -514,10 +559,12 @@ export function compileBlueprint(input: Blueprint) {
     make(C, "dc:Bounds", { x: c.x, y: c.y, width: c.w, height: c.h }, shape);
   }
   for (const edge of [
-    ...bp.edges,
+    ...allEdges,
     ...receiverEdges,
     ...exceptionEdges,
-    { id: "MessageFlow_4", source: "Participant_1", target: starts[0].id },
+    ...(bp.sender.type !== "timer"
+      ? [{ id: "MessageFlow_4", source: "Participant_1", target: starts[0].id }]
+      : []),
   ]) {
     const a = coords.get(edge.source)!,
       b = coords.get(edge.target)!;
@@ -564,5 +611,11 @@ export function compileBlueprint(input: Blueprint) {
   }
   const buffer = zip.toBuffer();
   const validation = requireValidDesign(buffer);
-  return { buffer, validation, nodes: bp.nodes.length, endpoint: bp.endpoint };
+  return {
+    buffer,
+    validation,
+    nodes: allNodes.length,
+    endpoint: bp.endpoint,
+    idMap: Object.fromEntries(idMap),
+  };
 }
