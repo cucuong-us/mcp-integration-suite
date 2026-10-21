@@ -266,5 +266,32 @@
       "activityType": "Send",
       "cmdVariantUri": "ctype::FlowstepVariant/cname::Send/version::1.0.4"
     }
+  },
+  "xsltMapping": {
+    "tag": "callActivity",
+    "properties": {
+      "mappingoutputformat": "String",
+      "mappinguri": "",
+      "mappingname": "",
+      "mappingHeaderNameKey": "",
+      "mappingpath": "",
+      "mappingSource": "mappingSrcIflow",
+      "componentVersion": "1.2",
+      "activityType": "Mapping",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::XSLTMapping/version::1.2.0",
+      "subActivityType": "XSLTMapping"
+    }
+  },
+  "xmlValidator": {
+    "tag": "callActivity",
+    "properties": {
+      "xmlSchemaSource": "iflowOption",
+      "preventException": "false",
+      "xsd": "",
+      "componentVersion": "2.2",
+      "activityType": "XmlValidator",
+      "cmdVariantUri": "ctype::FlowstepVariant/cname::XmlValidator/version::2.2.3",
+      "headerSource": ""
+    }
   }
 }

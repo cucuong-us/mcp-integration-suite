@@ -77,6 +77,8 @@ export const nodeSchema = z
       "router",
       "xmlToJson",
       "messageMapping",
+      "xsltMapping",
+      "xmlValidator",
       "requestReply",
       "generalSplitter",
       "gather",
@@ -416,6 +418,41 @@ export function validateBlueprintGraph(bp: ParsedBlueprint) {
       }
       if (n.type === "generalSplitter" && !n.properties.splitExprValue?.trim())
         throw new Error("Splitter requires splitExprValue");
+      if (n.type === "xsltMapping") {
+        const uri = n.properties.mappinguri || "";
+        const resource = uri.replace(/^dir:\/\/mapping\/xslt\//, "");
+        if (
+          !/^dir:\/\/mapping\/xslt\/src\/main\/resources\/mapping\/[A-Za-z0-9_.-]+\.xslt?$/.test(
+            uri,
+          ) ||
+          !bp.resources.some((r) => r.path === resource)
+        )
+          throw new Error(
+            "XSLT Mapping requires a bundled mappinguri resource",
+          );
+        if (
+          n.properties.mappingSource &&
+          n.properties.mappingSource !== "mappingSrcIflow"
+        )
+          throw new Error("Only bundled XSLT mappings are supported");
+      }
+      if (n.type === "xmlValidator") {
+        const resource = n.properties.xsd || "";
+        if (
+          !/^\/xsd\/[A-Za-z0-9_.-]+\.xsd$/.test(resource) ||
+          !bp.resources.some((r) => r.path === "src/main/resources" + resource)
+        )
+          throw new Error("XML Validator requires a bundled /xsd resource");
+        if (
+          (n.properties.preventException &&
+            n.properties.preventException !== "false") ||
+          (n.properties.xmlSchemaSource &&
+            n.properties.xmlSchemaSource !== "iflowOption")
+        )
+          throw new Error(
+            "XML Validator must fail on invalid input and use a bundled schema",
+          );
+      }
       if (
         n.type === "gather" &&
         !incoming.some((e) => nodes.get(e.source)?.type === "join") &&

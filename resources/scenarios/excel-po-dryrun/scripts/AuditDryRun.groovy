@@ -27,6 +27,20 @@ Message processData(Message message) {
         }
     }
     if (items != message.getProperty('itemCount')) throw new IllegalStateException('IDOC_TOTAL_COUNT')
+    if (message.getProperty('dryRun')?.toString() != 'true' || message.getProperty('masterValidationMode') != 'SYNTHETIC_FIXTURE') throw new IllegalStateException('DRY_RUN_GUARD')
     message.setProperty('candidateContractChecked',true)
+    if (message.getProperty('deliveryStatus') != 'NOT_POSTED' || message.getProperty('externalCalls')?.toString() != '0' || message.getProperty('backendPoCreated')?.toString() != 'false' || message.getProperty('idocSchemaVerified')?.toString() != 'false') throw new IllegalStateException('DRY_RUN_EVIDENCE_GUARD')
+    def log = messageLogFactory.getMessageLog(message)
+    if (log != null) {
+        log.addCustomHeaderProperty('DryRunResult','CANDIDATE_VALIDATED_NOT_POSTED')
+        log.addCustomHeaderProperty('DryRunOrderCount',message.getProperty('poCount').toString())
+        log.addCustomHeaderProperty('DryRunItemCount',message.getProperty('itemCount').toString())
+        log.addCustomHeaderProperty('DryRunExternalCalls','0')
+        log.addCustomHeaderProperty('DryRunMasterData','SYNTHETIC_FIXTURE')
+        log.addCustomHeaderProperty('DryRunSchemaVerified','false')
+        log.addCustomHeaderProperty('DryRunCase',message.getProperty('dryRunCase').toString())
+    }
+    // Never attach the workbook or IDoc body to MPL.
+
     return message
 }

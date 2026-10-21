@@ -1,0 +1,287 @@
+{
+    "runtime": "Java 1.8.0_461 / Groovy 2.4.21",
+    "passed": 28,
+    "total": 28,
+    "componentChecks": [
+        {
+            "id": "canonical-schema-rejects-missing-vendor",
+            "passed": true
+        },
+        {
+            "id": "candidate-schema-rejects-missing-vendor",
+            "passed": true
+        },
+        {
+            "id": "candidate-schema-rejects-false-certification",
+            "passed": true
+        },
+        {
+            "id": "audit-rejects-quantity-corruption",
+            "passed": true
+        },
+        {
+            "id": "audit-rejects-schedule-corruption",
+            "passed": true
+        },
+        {
+            "id": "audit-rejects-disabled-dryrun",
+            "passed": true
+        }
+    ],
+    "backendPoCreated": false,
+    "backendSchemaVerified": false,
+    "cases": [
+        {
+            "id": "valid",
+            "passed": true,
+            "expectedError": null,
+            "actualError": null,
+            "orders": 2,
+            "items": 3,
+            "externalCalls": "0"
+        },
+        {
+            "id": "shared-strings",
+            "passed": true,
+            "expectedError": null,
+            "actualError": null,
+            "orders": 2,
+            "items": 3,
+            "externalCalls": "0"
+        },
+        {
+            "id": "inline-strings",
+            "passed": true,
+            "expectedError": null,
+            "actualError": null,
+            "orders": 2,
+            "items": 3,
+            "externalCalls": "0"
+        },
+        {
+            "id": "excel-1904-dates",
+            "passed": true,
+            "expectedError": null,
+            "actualError": null,
+            "orders": 2,
+            "items": 3,
+            "externalCalls": "0"
+        },
+        {
+            "id": "missing-vendor",
+            "passed": true,
+            "expectedError": "PO_REQUIRED_FIELD",
+            "actualError": "PO_REQUIRED_FIELD row=2",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "unknown-vendor",
+            "passed": true,
+            "expectedError": "MASTER_VENDOR_NOT_ALLOWED",
+            "actualError": "MASTER_VENDOR_NOT_ALLOWED",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "unknown-material",
+            "passed": true,
+            "expectedError": "MASTER_MATERIAL_PLANT_NOT_FOUND",
+            "actualError": "MASTER_MATERIAL_PLANT_NOT_FOUND",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "unknown-plant",
+            "passed": true,
+            "expectedError": "MASTER_PLANT_NOT_FOUND",
+            "actualError": "MASTER_PLANT_NOT_FOUND",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "material-wrong-plant",
+            "passed": true,
+            "expectedError": "MASTER_MATERIAL_PLANT_NOT_FOUND",
+            "actualError": "MASTER_MATERIAL_PLANT_NOT_FOUND",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "zero-quantity",
+            "passed": true,
+            "expectedError": "PO_NUMBER_RANGE",
+            "actualError": "PO_NUMBER_RANGE field=Quantity",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "negative-quantity",
+            "passed": true,
+            "expectedError": "PO_NUMBER_RANGE",
+            "actualError": "PO_NUMBER_RANGE field=Quantity",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "zero-price",
+            "passed": true,
+            "expectedError": "PO_NUMBER_RANGE",
+            "actualError": "PO_NUMBER_RANGE field=NetPrice",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "quantity-precision",
+            "passed": true,
+            "expectedError": "PO_NUMBER_RANGE",
+            "actualError": "PO_NUMBER_RANGE field=Quantity",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "fractional-price-unit",
+            "passed": true,
+            "expectedError": "PO_NUMBER_RANGE",
+            "actualError": "PO_NUMBER_RANGE field=PriceUnit",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "duplicate-item",
+            "passed": true,
+            "expectedError": "PO_DUPLICATE_ITEM",
+            "actualError": "PO_DUPLICATE_ITEM",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "conflicting-header",
+            "passed": true,
+            "expectedError": "PO_INCONSISTENT_HEADER",
+            "actualError": "PO_INCONSISTENT_HEADER",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "invalid-date",
+            "passed": true,
+            "expectedError": "PO_DELIVERY_DATE",
+            "actualError": "PO_DELIVERY_DATE",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "missing-header",
+            "passed": true,
+            "expectedError": "XLSX_HEADERS",
+            "actualError": "XLSX_HEADERS",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "numeric-vendor",
+            "passed": true,
+            "expectedError": "XLSX_IDENTIFIER_MUST_BE_TEXT",
+            "actualError": "XLSX_IDENTIFIER_MUST_BE_TEXT",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "formula-rejected",
+            "passed": true,
+            "expectedError": "XLSX_FORMULA_UNSUPPORTED",
+            "actualError": "XLSX_FORMULA_UNSUPPORTED",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "dtd-rejected",
+            "passed": true,
+            "expectedError": "XLSX_XML_DTD",
+            "actualError": "XLSX_XML_DTD",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "zip-traversal",
+            "passed": true,
+            "expectedError": "XLSX_UNSAFE_PATH",
+            "actualError": "XLSX_UNSAFE_PATH",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "invalid-shared-string",
+            "passed": true,
+            "expectedError": "XLSX_SHARED_STRING_INDEX",
+            "actualError": "XLSX_SHARED_STRING_INDEX",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "empty-workbook",
+            "passed": true,
+            "expectedError": "XLSX_EMPTY_DATA",
+            "actualError": "XLSX_EMPTY_DATA",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "expanded-limit",
+            "passed": true,
+            "expectedError": "XLSX_EXPANDED_LIMIT",
+            "actualError": "XLSX_EXPANDED_LIMIT",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "row-limit",
+            "passed": true,
+            "expectedError": "XLSX_ROW_LIMIT",
+            "actualError": "XLSX_ROW_LIMIT",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "extra-sheet",
+            "passed": true,
+            "expectedError": "XLSX_SHEET_CONTRACT",
+            "actualError": "XLSX_SHEET_CONTRACT",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        },
+        {
+            "id": "not-a-zip",
+            "passed": true,
+            "expectedError": "XLSX_WORKBOOK_MISSING",
+            "actualError": "XLSX_WORKBOOK_MISSING",
+            "orders": null,
+            "items": null,
+            "externalCalls": 0
+        }
+    ]
+}

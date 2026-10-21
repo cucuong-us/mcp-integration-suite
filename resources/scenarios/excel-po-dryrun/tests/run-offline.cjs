@@ -42,6 +42,11 @@ function run(command, args) {
     path.join(__dirname, "generate-cases.cjs"),
     path.join(work, "cases"),
   ]);
+  const { buildBlueprint } = require("../build-blueprint.cjs");
+  fs.writeFileSync(
+    path.join(work, "execution-blueprint.json"),
+    JSON.stringify(buildBlueprint()),
+  );
   run("java", [
     "-cp",
     jar,
@@ -50,6 +55,7 @@ function run(command, args) {
     scenario,
     path.join(work, "cases"),
     path.join(work, "offline-results"),
+    path.join(work, "execution-blueprint.json"),
   ]);
 })().catch((e) => {
   console.error(e.message);

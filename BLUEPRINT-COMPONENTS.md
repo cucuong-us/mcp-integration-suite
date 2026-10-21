@@ -13,6 +13,8 @@ Các tool `preview-iflow-blueprint` và `create-iflow-from-blueprint` dùng cùn
 | XML to JSON | `xmlToJson` | SAP converter properties. |
 | JSON to XML | `jsonToXml` | Mặc định thêm root `root`; có thể cấu hình `addXMLRootElement`, `additionalRootElementName` và namespace. |
 | Message Mapping | `messageMapping` | Bundle phải có mapping/XSD được tham chiếu. |
+| XSLT Mapping | `xsltMapping` | `properties.mappinguri`: `dir://mapping/xslt/src/main/resources/mapping/Name.xsl`; phải bundle resource tương ứng. Chỉ hỗ trợ mapping trong iFlow. |
+| XML Validator | `xmlValidator` | `properties.xsd`: `/xsd/Name.xsd`; phải bundle XSD trong `src/main/resources/xsd/`. Dừng khi schema không hợp lệ, không cho suppress exception. |
 | General Splitter | `generalSplitter` | Bắt buộc `properties.splitExprValue`, ví dụ `//item`. Template mặc định XPath, streaming và xử lý tuần tự. |
 | Gather | `gather` | Template mặc định PlainText/concatenate; phải có Splitter upstream hoặc Join ngay trước. Không tự đoán XPath cho chiến lược XML. |
 | Parallel Multicast | `multicast` | Ít nhất hai nhánh, khai báo `joinId` của node Join cùng process. |

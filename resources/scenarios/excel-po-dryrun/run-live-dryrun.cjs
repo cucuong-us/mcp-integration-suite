@@ -8,6 +8,16 @@ const {
 const { buildBlueprint } = require("./build-blueprint.cjs");
 const repo = path.resolve(__dirname, "../../.."),
   folder = path.join(repo, "work/po-dryrun");
+const packageId =
+  process.argv.find((arg) => arg.startsWith("--package="))?.slice(10) ||
+  "McpIflowSafetyLab20261019";
+if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(packageId))
+  throw Error("Invalid package ID");
+if (
+  process.argv.includes("--resume") &&
+  process.argv.includes("--create-package")
+)
+  throw Error("Resume is read-only; cannot create a package");
 if (!process.argv.includes("--live")) {
   console.error(
     "Requires --live: creates and deploys isolated timer-based dry-run artifacts on the configured tenant. No IDoc/SFTP/network receiver is included.",
@@ -37,17 +47,30 @@ const cases = [
     stderr: "pipe",
   });
   transport.stderr?.on("data", () => {});
-  const resume=process.argv.includes('--resume');
-  const report = resume ? JSON.parse(fs.readFileSync(path.join(folder,'live-report.json'),'utf8')) : {
-    mode: "dry-run",
-    backendPoCreated: false,
-    backendSchemaVerified: false,
-    externalReceivers: 0,
-    editorVerified: false,
-    cases: [],
-  };
-  if (resume && (report.cases.length!==cases.length || report.cases.some((row,i)=>row.case!==cases[i].id || !/^McpExcelPoDryRun_[A-Za-z0-9_]+$/.test(row.id) || !row.taskId)))
-    throw Error('Resume requires the saved dry-run report with all three existing artifacts/task IDs');
+  const resume = process.argv.includes("--resume");
+  const report = resume
+    ? JSON.parse(fs.readFileSync(path.join(folder, "live-report.json"), "utf8"))
+    : {
+        mode: "dry-run",
+        backendPoCreated: false,
+        backendSchemaVerified: false,
+        externalReceivers: 0,
+        editorVerified: false,
+        cases: [],
+      };
+  if (
+    resume &&
+    (report.cases.length !== cases.length ||
+      report.cases.some(
+        (row, i) =>
+          row.case !== cases[i].id ||
+          !/^McpExcelPoDryRun_[A-Za-z0-9_]+$/.test(row.id) ||
+          !row.taskId,
+      ))
+  )
+    throw Error(
+      "Resume requires the saved dry-run report with all three existing artifacts/task IDs",
+    );
   const save = () =>
     fs.writeFileSync(
       path.join(folder, "live-report.json"),
@@ -59,7 +82,8 @@ const cases = [
     return data;
   };
   const call = async (name, args) => {
-    if(!name.startsWith('get-'))console.log(JSON.stringify({ tool: name, stage: "calling" }));
+    if (!name.startsWith("get-"))
+      console.log(JSON.stringify({ tool: name, stage: "calling" }));
     return parse(
       await client.callTool({ name, arguments: args }, undefined, {
         timeout: 180000,
@@ -75,6 +99,15 @@ const cases = [
     ).tools.length;
     save();
     // Submit each deployment once. Polling below never resubmits a business message.
+    if (!resume && process.argv.includes("--create-package")) {
+      await call("create-package", {
+        id: packageId,
+        name: packageId,
+        shortText:
+          "Isolated Excel PO native-component dry-run tests. No business receivers.",
+      });
+    }
+    if (!resume) report.packageId = packageId;
     for (const tc of resume ? [] : cases) {
       const id =
         "McpExcelPoDryRun_" +
@@ -100,7 +133,7 @@ const cases = [
       report.phase = "create";
       save();
       const created = await call("create-iflow-from-blueprint", {
-        packageId: "McpIflowSafetyLab20261019",
+        packageId,
         blueprint: bp,
       });
       row.sapValidation = created.sap.status;
@@ -131,8 +164,14 @@ const cases = [
         }
         const runtime = await call("get-iflow-runtime-status", { id: row.id });
         row.runtime = runtime.status;
-        const rawDeploymentTime=runtime.runtime?.DeployedOn;
-        const deploymentTime=rawDeploymentTime ? Date.parse(/Z$|[+-][0-9]{2}:[0-9]{2}$/.test(rawDeploymentTime)?rawDeploymentTime:rawDeploymentTime+'Z') : NaN;
+        const rawDeploymentTime = runtime.runtime?.DeployedOn;
+        const deploymentTime = rawDeploymentTime
+          ? Date.parse(
+              /Z$|[+-][0-9]{2}:[0-9]{2}$/.test(rawDeploymentTime)
+                ? rawDeploymentTime
+                : rawDeploymentTime + "Z",
+            )
+          : NaN;
         if (runtime.status === "STARTED") {
           const logs = await call("get-messages", {
             filterProps: { integrationFlowId: row.id },
@@ -147,14 +186,19 @@ const cases = [
                 ]),
               ),
             }))
-            .filter(({ log,headers }) => headers.DryRunCase === tc.id && (!Number.isFinite(deploymentTime) || Date.parse(log.logStart)>=deploymentTime));
+            .filter(
+              ({ log, headers }) =>
+                headers.DryRunCase === tc.id &&
+                (!Number.isFinite(deploymentTime) ||
+                  Date.parse(log.logStart) >= deploymentTime),
+            );
           if (matched.length > 1)
             throw Error("Ambiguous MPL correlation for " + tc.id);
           if (matched.length === 1) {
             const { log, headers } = matched[0];
             row.mplStatus = log.status;
-            row.messageGuid=log.messageGuid;
-            row.logStart=log.logStart;
+            row.messageGuid = log.messageGuid;
+            row.logStart = log.logStart;
             row.evidence = headers;
             if (!["PROCESSING", "RETRY"].includes(log.status)) {
               const expectedResult = tc.error

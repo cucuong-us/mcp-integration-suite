@@ -132,3 +132,21 @@ Kết quả tại thời điểm bàn giao bản triển khai:
 Validation Passed, deployment SUCCESS, runtime STARTED và editor mở được là các bằng chứng riêng. Chúng chưa xác nhận payload nghiệp vụ đi qua mọi nhánh đúng kết quả. Compiler cũng chưa hỗ trợ mọi SAP component, mọi Groovy/mapping hoặc mọi hệ thống đích.
 
 Xem [hướng dẫn sử dụng](README-SAFE-IFLOWS.md) để cấu hình, tạo flow và chạy test. Các liên kết tài liệu SAP được giữ ở cuối hướng dẫn đó. Credentials và dữ liệu/log riêng của tenant không được đưa vào repository.
+
+## 2026-10-21 — Refactor Excel PO dry-run to native CPI components
+
+The previous dry-run had eight Groovy steps in the main process. Fixture loading, IDoc XML construction and simulated delivery were implemented as scripts even though standard CPI steps can handle them.
+
+- Add blueprint node types xsltMapping and xmlValidator using exported component metadata from the existing pinned cpilint source. Require bundled resources; reject header-selected mapping and validators that suppress errors.
+- Replace the generated fixture-loader script with Content Modifier (base64 body and explicit test properties). The bounded Excel reader decodes only when fixtureEncoding=base64; normal XLSX bytes remain supported.
+- Replace MapCandidateIdocs.groovy with a reviewable XSLT 1.0 resource executed by native XSLT Mapping. Keep the candidate batch, TESTRUN flag, field values, grouping and leading-zero behavior.
+- Add native XML Validators before and after mapping, with two project-owned XSD contracts. These are local dry-run contracts, never backend-certified PORDCR103 schemas; backendSchemaVerified remains false.
+- Replace simulated-delivery script with Content Modifier setting NOT_POSTED and explicit no-posting metadata.
+- Combine master-fixture checks with PO business validation; combine semantic mapping audit, dry-run guards and MPL metadata in AuditDryRun.groovy. Retain independent semantic checks because schema validity alone cannot detect wrong field values.
+- Keep ten main nodes: Timer, two Content Modifiers, three Groovy steps, two XML Validators, one XSLT Mapping and End. Retain a separate exception-handler script plus Error End.
+- Improve offline runner to follow the blueprint and execute the bundled Groovy/XSLT/XSD. Add six rejection probes for native schemas, corrupted mapped values and disabled dry-run, plus compiler/ZIP missing-resource checks.
+- Add --package and explicit --create-package options to live runner; resume stays read-only. The old lab package was absent, so live verification used a new isolated package.
+
+Validation: TypeScript compile; 81 Jest tests / 12 suites; 28 workbook cases and 6 component/guard probes. Three isolated CPI artifacts passed SAP validation, deployed SUCCESS and reached STARTED. Valid MPL COMPLETED with 2 PO/3 items; zero quantity and unknown vendor produced the expected FAILED status and error metadata. Reports: docs/excel-po-native-verification-2026-10-21.json and docs/excel-po-native-offline-2026-10-21.json.
+
+Limits: no business receiver, SFTP/IDoc I/O, backend master-data lookup, backend-exported schema, real PO or editor UI verification. No performance improvement is claimed without measurement. Native-validator failure probes run offline; the two live negative cases fail in business validation before XML Validator.

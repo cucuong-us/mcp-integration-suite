@@ -268,6 +268,11 @@ export function validateDesignZip(
           id,
         );
       if (
+        props.get("activityType") === "XmlValidator" &&
+        !files.has("src/main/resources" + props.get("xsd"))
+      )
+        error("MISSING_XSD", file, "XML Validator schema does not exist", id);
+      if (
         ["Multicast", "SequentialMulticast"].includes(
           props.get("activityType") || "",
         )
@@ -361,9 +366,10 @@ export function validateDesignZip(
     for (const node of all) {
       if (node.localName !== "value") continue;
       const value = (node.textContent || "").trim();
-      const match = /^dir:\/\/[^/]+\/(src\/main\/resources\/[^?#]+)$/.exec(
-        value,
-      );
+      const match =
+        /^dir:\/\/[^/]+\/(?:xslt\/)?(src\/main\/resources\/[^?#]+)$/.exec(
+          value,
+        );
       if (match && !files.has(match[1]))
         error("MISSING_RESOURCE", file, `Resource does not exist: ${match[1]}`);
     }

@@ -14,18 +14,18 @@ Các chỗ “Hình ảnh” trong đề không có ảnh/dữ liệu đính kè
 
 ```mermaid
 flowchart LR
-  A[Timer run once] --> B[Load XLSX fixture]
-  B --> C[Read OOXML workbook]
-  C --> D[Validate and normalize POs]
-  D --> E[Validate fixture master data]
-  E --> F[Map candidate IDocs]
-  F --> G[Check candidate contract]
-  G --> H[Simulate delivery: NOT_POSTED]
-  H --> I[Record counts and outcome]
+  A[Timer run once] --> B[Content Modifier: synthetic XLSX and test context]
+  B --> C[Groovy: bounded OOXML reader]
+  C --> D[Groovy: business rules and fixture master data]
+  D --> E[XML Validator: canonical PO contract]
+  E --> F[XSLT Mapping: candidate IDocs]
+  F --> G[XML Validator: local candidate contract]
+  G --> H[Content Modifier: NOT_POSTED]
+  H --> I[Groovy: semantic audit and MPL metadata]
   I --> J[End]
 ```
 
-Có thêm Exception Subprocess để ghi mã lỗi và giữ trạng thái FAILED. Tổng structural component count là 14, trong đó 10 node thuộc main process. Source scripts trong `scripts/` là code thực thi thật; không có bản parser JS riêng dùng thay cho Groovy khi kiểm thử.
+Có thêm Exception Subprocess để ghi mã lỗi và giữ trạng thái FAILED. Tổng structural component count là 14, trong đó 10 node thuộc main process. Luồng chính giảm từ 8 xuống 3 Groovy steps: đọc Excel, kiểm tra nghiệp vụ/master fixture, và audit/logging. Có 2 Content Modifier, 2 XML Validator và 1 XSLT Mapping; ngoài ra có 1 script trong Exception Subprocess. Bộ test thực thi đúng Groovy/XSLT/XSD được bundle, không thay parser bằng bản JS.
 
 Không giả định Apache POI tồn tại trên CPI. Reader dùng `ZipInputStream`, `XmlSlurper` và Java/Groovy chuẩn. Đây là OOXML reader giới hạn theo input contract, không thay thế một thư viện Excel tổng quát.
 
@@ -69,7 +69,7 @@ Từ chối formula cells (không dùng cached formula result), workbook nhiều
 | DeliveryDate, Quantity | E1BPMEPOSCHEDULE / DELIVERY_DATE, QUANTITY |
 | Change indicators | E1BPMEPOHEADERX, E1BPMEPOITEMX, E1BPMEPOSCHEDULX |
 
-Control record có DIRECT=2, MESTYP=PORDCR1, IDOCTYP=PORDCR103 và logical systems giả lập. Candidate thêm TESTRUN=X nhưng **biện pháp ngăn posting của bài test là không có receiver channel**, không dựa vào việc backend có chấp nhận TESTRUN hay không. Contract checker kiểm tra counts, field values và change indicators; đây không phải XSD validation từ backend. Mapping dùng Groovy; chưa tạo graphical Message Mapping `.mmap` vì thiếu schema đích.
+Control record có DIRECT=2, MESTYP=PORDCR1, IDOCTYP=PORDCR103 và logical systems giả lập. Candidate thêm TESTRUN=X nhưng **biện pháp ngăn posting của bài test là không có receiver channel**, không dựa vào việc backend có chấp nhận TESTRUN hay không. Contract checker kiểm tra counts, field values và change indicators; đây không phải XSD validation từ backend. Mapping dùng native XSLT Mapping với [stylesheet](mapping/MapCandidateIdocs.xsl). Hai XML Validator dùng [canonical XSD](xsd/PurchaseOrders.xsd) và [candidate XSD](xsd/DryRunIdocBatch.xsd) do dự án định nghĩa. Candidate XSD kiểm tra cấu trúc local, không chứng nhận schema backend SAP; `idocSchemaVerified` vẫn false. Audit Groovy vẫn đối chiếu dữ liệu đầu vào với output để phát hiện mapping sai nhưng XML vẫn đúng schema.
 
 ## Chạy lại
 
@@ -83,7 +83,7 @@ npm run test:po-dryrun
 node resources/scenarios/excel-po-dryrun/build-blueprint.cjs work/po-dryrun/blueprint.json
 ```
 
-Lệnh offline tải Groovy 2.4.21 từ Maven Central nếu chưa có trong `work/`, xác minh SHA-256 được pin trong runner, rồi chạy chính các scripts CPI với Message stub. Các workbook lỗi được tạo trong `work/` bằng cách mutate ZIP/XML; không đưa hàng chục file test hỏng vào repo.
+Lệnh offline tải Groovy 2.4.21 từ Maven Central nếu chưa có trong `work/`, xác minh SHA-256 được pin trong runner, rồi đọc blueprint để chạy đúng chuỗi bước: Content Modifier với constant properties/body, Groovy với Message stub, XSLT 1.0 bằng Java Transformer và XSD bằng Java SchemaFactory. Harness giới hạn các cấu hình Content Modifier mà scenario sử dụng; không phải emulator đầy đủ cho mọi SAP component. Các workbook lỗi được tạo trong `work/` bằng cách mutate ZIP/XML; không đưa hàng chục file test hỏng vào repo.
 
 Kết quả gồm `work/po-dryrun/offline-results/offline-report.json`, `normalized-purchase-orders.xml`, `candidate-idocs.xml`. Local harness không mô phỏng đầy đủ Camel, OSGi, adapter hoặc backend SAP.
 
@@ -93,7 +93,7 @@ Kiểm tra trên tenant riêng đã cấu hình `.env`:
 npm run test:po-dryrun:live
 ```
 
-Lệnh live yêu cầu `--live` (đã có trong npm script), dùng 35 MCP tools hiện tại, tạo ID mới cho từng ca và deploy timer một lần. Chạy ba ca: valid, zero-quantity, unknown-vendor. Kết quả lưu `work/po-dryrun/live-report.json`.
+Lệnh live yêu cầu `--live` (đã có trong npm script), dùng 35 MCP tools hiện tại, tạo ID mới cho từng ca và deploy timer một lần. Chạy ba ca: valid, zero-quantity, unknown-vendor. Kết quả lưu `work/po-dryrun/live-report.json`. Nếu package cũ không tồn tại, chọn package thử nghiệm riêng: `npm run test:po-dryrun:live -- --package=McpPoNativeLab20261021 --create-package`. Cờ `--create-package` tạo package mới; bỏ cờ khi package đã tồn tại. Không kết hợp cờ này với `--resume`.
 
 PASS cần deployment/runtime phù hợp, MPL của đúng artifact và đúng `DryRunCase`, đúng COMPLETED/FAILED mong đợi, cùng custom header counts/error code. Không coi deployment SUCCESS hoặc MPL FAILED bất kỳ là đủ. Không tự redeploy vì chờ lâu. API key quản trị đủ cho bài test timer này; không cần gửi payload vào HTTPS runtime endpoint.
 
@@ -101,7 +101,7 @@ Nếu cần kiểm tra tiếp các task đã lưu sau timeout, dùng `npm run te
 
 Không attach workbook hoặc IDoc body vào MPL; chỉ ghi nhãn ca, số PO/item, trạng thái giả lập và mã lỗi. Báo cáo công khai phải bỏ tenant URL, tài khoản và thông tin xác thực.
 
-## Kết quả kiểm thử ngày 2026-10-20
+## Kết quả phiên bản trước ngày 2026-10-20
 
 - TypeScript compile pass; 78 Jest tests trong 12 suites pass.
 - 28/28 ca chạy trực tiếp Groovy scripts trên Java 8 / Groovy 2.4.21 pass.
@@ -118,6 +118,18 @@ MPL FAILED là kết quả mong đợi cho hai ca negative, không phải hai fl
 Bài test phát hiện và dẫn tới hai chỉnh sửa compiler: timer start dùng metadata trên timerEventDefinition như SAP export; Exception Subprocess dùng IDs theo mẫu SAP export. Trước khi chuẩn hóa ID exception, ca negative FAILED đúng lỗi nhưng custom metadata handler không được ghi; sau sửa, cả logging và Error End đã được chứng minh bằng MPL. Không suy ra rằng đây là quy tắc được bảo đảm trên mọi phiên bản SAP chỉ từ thử nghiệm này.
 
 Editor UI cho flow mới chưa được kiểm tra trong lượt này. Không có SFTP/IDoc adapter I/O, backend XSD validation, archive/email hoặc PO thật trong kết quả trên.
+
+## Refactor component chuẩn ngày 2026-10-21
+
+- Bỏ các script riêng để nạp fixture, dựng IDoc và mô phỏng delivery; chuyển sang Content Modifier/XSLT Mapping.
+- Gộp kiểm tra master fixture vào business validation, gộp đối chiếu candidate và logging vào một bước audit; giữ checks đang có.
+- XML Validator dừng khi không đúng XSD (preventException=false). Thêm negative probes cho thiếu field, cờ schemaVerified sai, mapping quantity/schedule bị sửa và dryRun bị tắt.
+- Không thêm Router/Splitter chỉ để tăng số component: dry-run hiện không có nhánh gửi backend và XSLT xử lý toàn bộ batch 2 PO. IDoc Receiver vẫn chưa được bổ sung hoặc cấu hình; chưa có backend để kiểm thử I/O.
+- XML Validator và XSLT Mapping đã được bổ sung vào compiler/schema, với kiểm tra resource đi kèm trước khi upload. Tham khảo [SAP XSLT Mapping](https://help.sap.com/docs/integration-suite/sap-integration-suite/create-xslt-mapping).
+
+Kết quả chạy lại: TypeScript compile pass; 81/81 Jest tests (12 suites); 28/28 workbook cases và 6/6 native-component/guard probes offline pass. Trên CPI, cả ba artifact SAP validation passed, deployment SUCCESS và runtime STARTED; valid có MPL COMPLETED (2 PO/3 item), hai ca negative có MPL FAILED với đúng mã PO_NUMBER_RANGE và MASTER_VENDOR_NOT_ALLOWED. Không có business receiver. Xem [live report](../../../docs/excel-po-native-verification-2026-10-21.json) và [offline report](../../../docs/excel-po-native-offline-2026-10-21.json). Các report ngày 2026-10-20 phía trên mô tả phiên bản cũ.
+
+Package thử nghiệm cũ không còn trên tenant; đợt test này tạo package riêng McpPoNativeLab20261021. Editor UI và backend SAP vẫn chưa được kiểm tra. XML Validator rejection probes chạy offline với Java XSD engine; hai lỗi live hiện tại bị từ chối ở business validation trước bước XML Validator.
 
 ## Đối chiếu với đề bài
 

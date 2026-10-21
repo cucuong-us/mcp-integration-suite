@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Local dry-run contract, never a certified SAP backend schema. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="DryRunIdocBatch">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Order" maxOccurs="1000">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="PORDCR103">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="IDOC">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="EDI_DC40">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="TABNAM" type="xs:string"/>
+                                <xs:element name="DIRECT" type="xs:string"/>
+                                <xs:element name="IDOCTYP" type="xs:string"/>
+                                <xs:element name="MESTYP" type="xs:string"/>
+                                <xs:element name="SNDPOR" type="xs:string"/>
+                                <xs:element name="SNDPRT" type="xs:string"/>
+                                <xs:element name="SNDPRN" type="xs:string"/>
+                                <xs:element name="RCVPOR" type="xs:string"/>
+                                <xs:element name="RCVPRT" type="xs:string"/>
+                                <xs:element name="RCVPRN" type="xs:string"/>
+                              </xs:sequence>
+                              <xs:attribute name="SEGMENT" type="xs:string" use="required" fixed="1"/>
+                            </xs:complexType>
+                          </xs:element>
+                          <xs:element name="E1PORDCR1">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="TESTRUN" type="xs:string"/>
+                                <xs:element name="E1BPMEPOHEADER">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="COMP_CODE" type="xs:string"/>
+                                      <xs:element name="DOC_TYPE" type="xs:string"/>
+                                      <xs:element name="VENDOR" type="xs:string"/>
+                                      <xs:element name="PURCH_ORG" type="xs:string"/>
+                                      <xs:element name="PUR_GROUP" type="xs:string"/>
+                                      <xs:element name="CURRENCY" type="xs:string"/>
+                                    </xs:sequence>
+                                    <xs:attribute name="SEGMENT" type="xs:string" use="required" fixed="1"/>
+                                  </xs:complexType>
+                                </xs:element>
+                                <xs:element name="E1BPMEPOHEADERX">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element name="COMP_CODE" type="xs:string"/>
+                                      <xs:element name="DOC_TYPE" type="xs:string"/>
+                                      <xs:element name="VENDOR" type="xs:string"/>
+                                      <xs:element name="PURCH_ORG" type="xs:string"/>
+                                      <xs:element name="PUR_GROUP" type="xs:string"/>
+                                      <xs:element name="CURRENCY" type="xs:string"/>
+                                    </xs:sequence>
+                                    <xs:attribute name="SEGMENT" type="xs:string" use="required" fixed="1"/>
+                                  </xs:complexType>
+                                </xs:element>
+                                <xs:sequence maxOccurs="1000">
+                                  <xs:element name="E1BPMEPOITEM">
+                                    <xs:complexType>
+                                      <xs:sequence>
+                                        <xs:element name="PO_ITEM" type="xs:string"/>
+                                        <xs:element name="MATERIAL" type="xs:string"/>
+                                        <xs:element name="PLANT" type="xs:string"/>
+                                        <xs:element name="QUANTITY" type="xs:string"/>
+                                        <xs:element name="PO_UNIT" type="xs:string"/>
+                                        <xs:element name="NET_PRICE" type="xs:string"/>
+                                        <xs:element name="PRICE_UNIT" type="xs:string"/>
+                                      </xs:sequence>
+                                      <xs:attribute name="SEGMENT" type="xs:string" use="required" fixed="1"/>
+                                    </xs:complexType>
+                                  </xs:element>
+                                  <xs:element name="E1BPMEPOITEMX">
+                                    <xs:complexType>
+                                      <xs:sequence>
+                                        <xs:element name="PO_ITEM" type="xs:string"/>
+                                        <xs:element name="PO_ITEMX" type="xs:string"/>
+                                        <xs:element name="MATERIAL" type="xs:string"/>
+                                        <xs:element name="PLANT" type="xs:string"/>
+                                        <xs:element name="QUANTITY" type="xs:string"/>
+                                        <xs:element name="PO_UNIT" type="xs:string"/>
+                                        <xs:element name="NET_PRICE" type="xs:string"/>
+                                        <xs:element name="PRICE_UNIT" type="xs:string"/>
+                                      </xs:sequence>
+                                      <xs:attribute name="SEGMENT" type="xs:string" use="required" fixed="1"/>
+                                    </xs:complexType>
+                                  </xs:element>
+                                  <xs:element name="E1BPMEPOSCHEDULE">
+                                    <xs:complexType>
+                                      <xs:sequence>
+                                        <xs:element name="PO_ITEM" type="xs:string"/>
+                                        <xs:element name="SCHED_LINE" type="xs:string"/>
+                                        <xs:element name="DELIVERY_DATE" type="xs:string"/>
+                                        <xs:element name="QUANTITY" type="xs:string"/>
+                                      </xs:sequence>
+                                      <xs:attribute name="SEGMENT" type="xs:string" use="required" fixed="1"/>
+                                    </xs:complexType>
+                                  </xs:element>
+                                  <xs:element name="E1BPMEPOSCHEDULX">
+                                    <xs:complexType>
+                                      <xs:sequence>
+                                        <xs:element name="PO_ITEM" type="xs:string"/>
+                                        <xs:element name="SCHED_LINE" type="xs:string"/>
+                                        <xs:element name="PO_ITEMX" type="xs:string"/>
+                                        <xs:element name="SCHED_LINEX" type="xs:string"/>
+                                        <xs:element name="DELIVERY_DATE" type="xs:string"/>
+                                        <xs:element name="QUANTITY" type="xs:string"/>
+                                      </xs:sequence>
+                                      <xs:attribute name="SEGMENT" type="xs:string" use="required" fixed="1"/>
+                                    </xs:complexType>
+                                  </xs:element>
+                                </xs:sequence>
+                              </xs:sequence>
+                              <xs:attribute name="SEGMENT" type="xs:string" use="required" fixed="1"/>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="BEGIN" type="xs:string" use="required" fixed="1"/>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="reference" type="xs:string" use="required"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="status" type="xs:string" use="required" fixed="NOT_POSTED"/>
+      <xs:attribute name="schemaVerified" type="xs:string" use="required" fixed="false"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

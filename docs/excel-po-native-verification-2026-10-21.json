@@ -1,0 +1,76 @@
+{
+  "mode": "dry-run",
+  "backendPoCreated": false,
+  "backendSchemaVerified": false,
+  "externalReceivers": 0,
+  "editorVerified": false,
+  "cases": [
+    {
+      "case": "valid",
+      "id": "McpExcelPoDryRun_valid_ab7d5d26",
+      "coreNodes": 10,
+      "outcome": "passed",
+      "localValid": true,
+      "sapValidation": "passed",
+      "taskId": "405139ce-8f4e-486a-53a1-60c64f5cc48e",
+      "deployment": "SUCCESS",
+      "runtime": "STARTED",
+      "mplStatus": "COMPLETED",
+      "messageGuid": "AGrYriT-3JUoSBuGQKxX3HP89lM3",
+      "logStart": "2026-10-21T12:20:52.308Z",
+      "evidence": {
+        "DryRunSchemaVerified": "false",
+        "DryRunExternalCalls": "0",
+        "DryRunItemCount": "3",
+        "DryRunCase": "valid",
+        "DryRunResult": "CANDIDATE_VALIDATED_NOT_POSTED",
+        "DryRunMasterData": "SYNTHETIC_FIXTURE",
+        "DryRunOrderCount": "2"
+      }
+    },
+    {
+      "case": "zero-quantity",
+      "id": "McpExcelPoDryRun_zero_quantity_b8d54a8c",
+      "coreNodes": 10,
+      "outcome": "passed",
+      "localValid": true,
+      "sapValidation": "passed",
+      "taskId": "9f7d359f-ec24-4499-7de1-9eb3620fcae4",
+      "deployment": "SUCCESS",
+      "runtime": "STARTED",
+      "mplStatus": "FAILED",
+      "messageGuid": "AGrYrijl9xUynPV-28nOPYjtfhR9",
+      "logStart": "2026-10-21T12:20:56.250Z",
+      "evidence": {
+        "DryRunExternalCalls": "0",
+        "DryRunResult": "REJECTED_OR_FAILED",
+        "DryRunCase": "zero-quantity",
+        "DryRunErrorCode": "PO_NUMBER_RANGE"
+      }
+    },
+    {
+      "case": "unknown-vendor",
+      "id": "McpExcelPoDryRun_unknown_vendor_0a596ef1",
+      "coreNodes": 10,
+      "outcome": "passed",
+      "localValid": true,
+      "sapValidation": "passed",
+      "taskId": "0617f214-e898-4ad9-5830-226e9648edca",
+      "deployment": "SUCCESS",
+      "runtime": "STARTED",
+      "mplStatus": "FAILED",
+      "messageGuid": "AGrYri3bEGtp_vDLUM4M3AykWa95",
+      "logStart": "2026-10-21T12:21:01.256Z",
+      "evidence": {
+        "DryRunErrorCode": "MASTER_VENDOR_NOT_ALLOWED",
+        "DryRunExternalCalls": "0",
+        "DryRunCase": "unknown-vendor",
+        "DryRunResult": "REJECTED_OR_FAILED"
+      }
+    }
+  ],
+  "phase": "finished",
+  "mcpToolCount": 35,
+  "packageId": "McpPoNativeLab20261021",
+  "passed": true
+}

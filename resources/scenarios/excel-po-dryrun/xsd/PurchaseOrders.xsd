@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Local dry-run contract, never a certified SAP backend schema. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="PurchaseOrders">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="PurchaseOrder" maxOccurs="1000">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Header">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="CompanyCode" type="xs:string"/>
+                    <xs:element name="DocType" type="xs:string"/>
+                    <xs:element name="Vendor" type="xs:string"/>
+                    <xs:element name="PurchOrg" type="xs:string"/>
+                    <xs:element name="PurchGroup" type="xs:string"/>
+                    <xs:element name="Currency" type="xs:string"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Items">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Item" maxOccurs="1000">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="ItemNo" type="xs:string"/>
+                          <xs:element name="Material" type="xs:string"/>
+                          <xs:element name="Plant" type="xs:string"/>
+                          <xs:element name="Quantity" type="xs:string"/>
+                          <xs:element name="Unit" type="xs:string"/>
+                          <xs:element name="NetPrice" type="xs:string"/>
+                          <xs:element name="PriceUnit" type="xs:string"/>
+                          <xs:element name="DeliveryDate" type="xs:date"/>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="reference" type="xs:string" use="required"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

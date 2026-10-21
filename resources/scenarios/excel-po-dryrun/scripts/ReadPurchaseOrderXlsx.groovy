@@ -15,7 +15,9 @@ def secureXml(byte[] bytes) {
 }
 
 Message processData(Message message) {
-    byte[] input = message.getBody(byte[].class)
+    // Only the synthetic timer harness supplies base64; normal adapters supply raw XLSX bytes.
+    byte[] input = message.getProperty('fixtureEncoding') == 'base64' ? message.getBody(String).decodeBase64() : message.getBody(byte[].class)
+    message.setProperty('sourceSha256', java.security.MessageDigest.getInstance('SHA-256').digest(input).encodeHex().toString())
     if (input == null || input.length == 0 || input.length > 2 * 1024 * 1024) throw new IllegalArgumentException('XLSX_SIZE')
     Map<String, byte[]> files = [:]
     def zip = new ZipInputStream(new ByteArrayInputStream(input))
