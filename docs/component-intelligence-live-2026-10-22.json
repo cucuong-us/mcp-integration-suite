@@ -1,0 +1,97 @@
+{
+  "mode": "synthetic-native-component-test",
+  "externalReceiversDeployed": 0,
+  "editorVerified": false,
+  "apiAdapterIoVerified": false,
+  "backendVerified": false,
+  "cases": [
+    {
+      "case": "sequential",
+      "id": "McpSmart_sequential_46f2f5",
+      "localValid": true,
+      "analysisValid": true,
+      "sapValidation": "passed",
+      "taskId": "db00e193-da82-427c-5300-56c45a8d4961",
+      "outcome": "passed",
+      "deployment": "SUCCESS",
+      "runtime": "STARTED",
+      "mplStatus": "COMPLETED",
+      "messageGuid": "AGrZaMQkve3yUi3JTHsMITYvPCUJ",
+      "logStart": "2026-10-22T01:37:08.548Z",
+      "evidence": {
+        "SmartCase": "sequential",
+        "SmartResult": "COMPLETE",
+        "SmartRecordCount": "2"
+      }
+    },
+    {
+      "case": "parallel",
+      "id": "McpSmart_parallel_25d3da",
+      "localValid": true,
+      "analysisValid": true,
+      "sapValidation": "passed",
+      "taskId": "e0c544fa-cfe7-4dc5-4142-3794df48a1b7",
+      "outcome": "passed",
+      "deployment": "SUCCESS",
+      "runtime": "STARTED",
+      "mplStatus": "COMPLETED",
+      "messageGuid": "AGrZaMngQdgockLev75U16dk6Mkg",
+      "logStart": "2026-10-22T01:37:13.276Z",
+      "evidence": {
+        "SmartRecordCount": "2",
+        "SmartResult": "COMPLETE",
+        "SmartCase": "parallel"
+      }
+    },
+    {
+      "case": "bad-response",
+      "id": "McpSmart_bad_response_9e03af",
+      "expectedError": "SMART_BUSINESS_RESPONSE",
+      "localValid": true,
+      "analysisValid": true,
+      "sapValidation": "passed",
+      "taskId": "00afc060-89c6-414b-5c18-696d653340ae",
+      "outcome": "passed",
+      "deployment": "SUCCESS",
+      "runtime": "STARTED",
+      "mplStatus": "FAILED",
+      "messageGuid": "AGrZaM3nuNmsIdvZR76ipO4QfgdE",
+      "logStart": "2026-10-22T01:37:17.639Z",
+      "evidence": {
+        "SmartCase": "bad-response",
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_BUSINESS_RESPONSE"
+      }
+    }
+  ],
+  "httpDesigns": [
+    {
+      "id": "McpSmartHttp_none_b4b72b",
+      "authentication": "none",
+      "method": "POST",
+      "sapValidation": "passed",
+      "deployed": false,
+      "adapterIoVerified": false
+    },
+    {
+      "id": "McpSmartHttp_basic_da0d98",
+      "authentication": "basic",
+      "method": "POST",
+      "sapValidation": "passed",
+      "deployed": false,
+      "adapterIoVerified": false
+    },
+    {
+      "id": "McpSmartHttp_oauth2ClientCredentials_f1dd4e",
+      "authentication": "oauth2ClientCredentials",
+      "method": "PATCH",
+      "sapValidation": "passed",
+      "deployed": false,
+      "adapterIoVerified": false
+    }
+  ],
+  "toolCount": 38,
+  "catalogCount": 18,
+  "packageId": "McpSmartLab20261022c95093",
+  "passed": true
+}

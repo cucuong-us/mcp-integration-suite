@@ -1,0 +1,42 @@
+{
+  "id": "SmartPurchaseOrderApi",
+  "name": "Smart Purchase Order API",
+  "goal": "split-api",
+  "inputFormat": "xml",
+  "endpoint": "/smart/purchase-orders",
+  "receiver": {
+    "type": "http",
+    "url": "https://api.example.com/purchase-orders",
+    "method": "POST",
+    "authentication": {
+      "type": "basic",
+      "credentialName": "ExampleApiCredentials"
+    },
+    "timeoutMs": 15000,
+    "responseFormat": "json"
+  },
+  "split": {
+    "xpath": "/Batch/PurchaseOrder",
+    "businessUnit": "purchaseOrder",
+    "recordElement": "PurchaseOrder",
+    "keyXPath": "@id",
+    "sampleXml": "<Batch><PurchaseOrder id=\"PO-A\"><Item>1</Item><Item>2</Item></PurchaseOrder><PurchaseOrder id=\"PO-B\"><Item>3</Item></PurchaseOrder></Batch>",
+    "maxRecords": 100,
+    "parallel": false,
+    "concurrency": 1,
+    "receiverEnforcesIdempotency": false,
+    "response": {
+      "format": "json",
+      "successCodes": [
+        200,
+        201
+      ],
+      "requiredFields": [
+        "documentId"
+      ],
+      "expectedFields": {
+        "status": "accepted"
+      }
+    }
+  }
+}

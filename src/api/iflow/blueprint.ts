@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import AdmZip from "adm-zip";
 import { globSync } from "glob";
+import { analyzeParsedBlueprint } from "./componentIntelligence";
 import { elements, requireValidDesign } from "../../utils/designValidation";
 const B = "http://www.omg.org/spec/BPMN/20100524/MODEL";
 const D = "http://www.omg.org/spec/BPMN/20100524/DI";
@@ -131,6 +132,14 @@ function donor(type: string): Element {
 export function compileBlueprint(input: Blueprint) {
   const bp = blueprintSchema.parse(input);
   validateBlueprintGraph(bp);
+  const analysis = analyzeParsedBlueprint(bp);
+  if (!analysis.valid)
+    throw new Error(
+      analysis.issues
+        .filter((i) => i.severity === "error")
+        .map((i) => i.code + ": " + i.message)
+        .join("; "),
+    );
   // SAP validation accepted arbitrary IDs but the tested tenant emitted an
   // empty local Camel route. Follow the naming used by exported SAP models.
   const idMap = new Map<string, string>();
@@ -225,6 +234,13 @@ export function compileBlueprint(input: Blueprint) {
     prop.getElementsByTagName("value")[0].textContent = value;
   };
   const collaboration = elements(doc, B, "collaboration")[0];
+  property(
+    collaboration,
+    "namespaceMapping",
+    Object.entries(bp.namespaces)
+      .map(([prefix, uri]) => `xmlns:${prefix}=${uri}`)
+      .join(";"),
+  );
   const processes = new Map<string, Element>([["Process_1", process]]);
   for (const local of bp.localProcesses) {
     const p = doc.importNode(donor("localProcess"), true) as Element;
@@ -433,21 +449,78 @@ export function compileBlueprint(input: Blueprint) {
         property(channel, key, value);
     } else {
       const url = new URL(config.url);
-      property(channel, "httpAddressWithoutQuery", url.origin + url.pathname);
+      // These defaults must never inherit sample auth, retries or payload attachments.
+      property(
+        channel,
+        "authenticationMethod",
+        config.authentication.type === "basic"
+          ? "Basic"
+          : config.authentication.type === "oauth2ClientCredentials"
+            ? "OAuth2 Client Credentials"
+            : "None",
+      );
+      property(
+        channel,
+        "credentialName",
+        config.authentication.type === "none"
+          ? ""
+          : config.authentication.credentialName,
+      );
+      property(channel, "httpRequestTimeout", String(config.timeoutMs));
+      property(
+        channel,
+        "allowedRequestHeaders",
+        config.requestHeaders.join("|"),
+      );
+      property(
+        channel,
+        "allowedResponseHeaders",
+        config.responseHeaders.join("|"),
+      );
+      property(
+        channel,
+        "throwExceptionOnFailure",
+        String(config.errorHandling === "throw"),
+      );
+      property(channel, "enableMPLAttachments", "false");
+      property(channel, "retryOnConnectionFailure", "false");
+      property(
+        channel,
+        "httpAddressWithoutQuery",
+        url.origin +
+          url.pathname +
+          (config.appendRecordKeyToPath
+            ? (url.pathname.endsWith("/") ? "" : "/") + "${header.X-Smart-Key}"
+            : ""),
+      );
       property(channel, "httpAddressQuery", url.search.slice(1));
       property(channel, "httpMethod", config.method);
       property(
         channel,
         "httpShouldSendBody",
-        config.method === "GET" ? "false" : "true",
+        String(
+          config.sendBody ?? !["GET", "HEAD", "DELETE"].includes(config.method),
+        ),
       );
     }
     collaboration.appendChild(channel);
   }
   const exceptionEdges: { id: string; source: string; target: string }[] = [];
-  if (bp.exceptionHandler) {
+  const exceptionId = (kind: string, id: string) =>
+    kind + "_Exception" + (id === "Process_1" ? "" : "_" + id);
+  const exceptionHandlers = [
+    { processId: "Process_1", nodes: bp.nodes, handler: bp.exceptionHandler },
+    ...bp.localProcesses.map((local) => ({
+      processId: local.id,
+      nodes: local.nodes,
+      handler: local.exceptionHandler,
+    })),
+  ].filter((entry) => entry.handler);
+  for (const entry of exceptionHandlers) {
+    const config = entry.handler!;
+    const exId = (kind: string) => exceptionId(kind, entry.processId);
     const sub = doc.importNode(donor("exception"), true) as Element;
-    sub.setAttribute("id", "SubProcess_Exception");
+    sub.setAttribute("id", exId("SubProcess"));
     sub.setAttribute("name", "Exception Subprocess");
     for (const child of Array.from(sub.childNodes))
       if ((child as Element).localName !== "extensionElements")
@@ -455,16 +528,16 @@ export function compileBlueprint(input: Blueprint) {
     const errStart = doc.importNode(donor("errorStart"), true) as Element;
     const handler = doc.importNode(donor("groovy"), true) as Element;
     const errEnd = doc.importNode(
-      donor(bp.exceptionHandler.end === "error" ? "errorEnd" : "end"),
+      donor(config.end === "error" ? "errorEnd" : "end"),
       true,
     ) as Element;
     for (const [e, id, name] of [
-      [errStart, "StartEvent_Exception", "Error Start"],
-      [handler, "CallActivity_Exception", bp.exceptionHandler.name],
+      [errStart, exId("StartEvent"), "Error Start"],
+      [handler, exId("CallActivity"), config.name],
       [
         errEnd,
-        "EndEvent_Exception",
-        bp.exceptionHandler.end === "error" ? "Error End" : "Error Handled",
+        exId("EndEvent"),
+        config.end === "error" ? "Error End" : "Error Handled",
       ],
     ] as const) {
       e.setAttribute("id", id);
@@ -475,21 +548,22 @@ export function compileBlueprint(input: Blueprint) {
       sub.appendChild(e);
     }
     property(handler, "scriptBundleId", "");
-    property(handler, "script", bp.exceptionHandler.script);
+    property(handler, "script", config.script);
     property(handler, "scriptFunction", "");
-    exceptionEdges.push(
+    const localEdges = [
       {
-        id: "SequenceFlow_Exception_1",
-        source: "StartEvent_Exception",
-        target: "CallActivity_Exception",
+        id: exId("SequenceFlow") + "_1",
+        source: exId("StartEvent"),
+        target: exId("CallActivity"),
       },
       {
-        id: "SequenceFlow_Exception_2",
-        source: "CallActivity_Exception",
-        target: "EndEvent_Exception",
+        id: exId("SequenceFlow") + "_2",
+        source: exId("CallActivity"),
+        target: exId("EndEvent"),
       },
-    );
-    for (const edge of exceptionEdges) {
+    ];
+    exceptionEdges.push(...localEdges);
+    for (const edge of localEdges) {
       make(
         B,
         "bpmn2:sequenceFlow",
@@ -505,7 +579,7 @@ export function compileBlueprint(input: Blueprint) {
       make(B, "bpmn2:outgoing", {}, source).textContent = edge.id;
       make(B, "bpmn2:incoming", {}, target).textContent = edge.id;
     }
-    process.appendChild(sub);
+    processes.get(entry.processId)!.appendChild(sub);
   }
   const plane = elements(doc, D, "BPMNPlane")[0];
   while (plane.firstChild) plane.removeChild(plane.firstChild);
@@ -515,8 +589,14 @@ export function compileBlueprint(input: Blueprint) {
   >();
   for (const [i, n] of allNodes.entries())
     coords.set(n.id, {
-      x: n.x ?? 200 + i * 150,
-      y: n.y ?? 170 + graphs.findIndex((g) => g.id === owner.get(n.id)) * 420,
+      x:
+        n.x ??
+        200 +
+          graphs
+            .find((g) => g.id === owner.get(n.id))!
+            .nodes.findIndex((node) => node.id === n.id) *
+            150,
+      y: n.y ?? 170 + graphs.findIndex((g) => g.id === owner.get(n.id)) * 520,
       w: ["start", "end"].includes(n.type)
         ? 32
         : ["router", "multicast", "sequentialMulticast", "join"].includes(
@@ -532,20 +612,21 @@ export function compileBlueprint(input: Blueprint) {
           ? 40
           : 60,
     });
-  if (bp.exceptionHandler) {
+  for (const entry of exceptionHandlers) {
+    const exId = (kind: string) => exceptionId(kind, entry.processId);
     const y =
       Math.max(
-        ...bp.nodes.map((n) => coords.get(n.id)!).map((c) => c.y + c.h),
+        ...entry.nodes.map((n) => coords.get(n.id)!).map((c) => c.y + c.h),
       ) + 80;
-    coords.set("SubProcess_Exception", { x: 200, y, w: 480, h: 150 });
-    coords.set("StartEvent_Exception", { x: 230, y: y + 60, w: 32, h: 32 });
-    coords.set("CallActivity_Exception", { x: 340, y: y + 45, w: 100, h: 60 });
-    coords.set("EndEvent_Exception", { x: 570, y: y + 60, w: 32, h: 32 });
+    coords.set(exId("SubProcess"), { x: 200, y, w: 480, h: 150 });
+    coords.set(exId("StartEvent"), { x: 230, y: y + 60, w: 32, h: 32 });
+    coords.set(exId("CallActivity"), { x: 340, y: y + 45, w: 100, h: 60 });
+    coords.set(exId("EndEvent"), { x: 570, y: y + 60, w: 32, h: 32 });
   }
   for (const [index, g] of graphs.entries()) {
     const bounds = g.nodes.map((n) => coords.get(n.id)!);
-    if (index === 0 && bp.exceptionHandler)
-      bounds.push(coords.get("SubProcess_Exception")!);
+    if (exceptionHandlers.some((entry) => entry.processId === g.id))
+      bounds.push(coords.get(exceptionId("SubProcess", g.id))!);
     const x = Math.min(...bounds.map((c) => c.x)) - 60,
       y = Math.min(...bounds.map((c) => c.y)) - 80;
     coords.set(index === 0 ? "Participant_Process_1" : "Local_" + g.id, {
@@ -632,5 +713,6 @@ export function compileBlueprint(input: Blueprint) {
     nodes: allNodes.length,
     endpoint: bp.endpoint,
     idMap: Object.fromEntries(idMap),
+    analysis,
   };
 }

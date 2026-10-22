@@ -96,3 +96,7 @@ Kết quả ngày 2026-10-20:
 Hai yêu cầu từ SAP validation đã được đưa vào code và regression checks: nhánh Multicast phải có tên; OData timeout phải tính bằng giây, giá trị 1–300. SFTP sender hiện chỉ expose giá trị post-processing `delete` đã xác minh với SAP, và yêu cầu người tạo chọn tường minh.
 
 Nguồn template, phiên bản và license: [component templates](resources/component-templates/README.md). Luôn phân biệt local validation, SAP validation, deployment, runtime STARTED, editor UI và kết quả payload/MPL. API giữ `editorVerified: false`; các thành phần mới chưa được xác minh trong editor do Computer Use dừng vì không xác định chắc URL cửa sổ Chrome.
+
+## Planning, typed settings and process-scoped errors
+
+See [COMPONENT-INTELLIGENCE.md](COMPONENT-INTELLIGENCE.md) for the 18-component decision catalog, eight planning goals and sample-based semantic analysis. Node `splitter`/`gather` settings compile to SAP properties and reject conflicting raw values. HTTP receivers support Basic/OAuth aliases, GET/HEAD/POST/PUT/PATCH/DELETE, timeout in milliseconds, header allowlists and explicit error policy. Main and `localProcesses[]` may each declare `exceptionHandler`; the handler is emitted inside its own process with unique IDs and diagram. Main handlers alone are insufficient for some local worker errors, as demonstrated by the runtime regression.

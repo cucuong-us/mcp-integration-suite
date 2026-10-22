@@ -20,12 +20,45 @@ const sftpFields = {
   fileName: z.string().min(1),
   credentialName: alias,
 };
-const httpReceiver = z
+const headerName = z
+  .string()
+  .regex(/^[A-Za-z][A-Za-z0-9_-]*$/)
+  .refine(
+    (v) =>
+      !/^(authorization|host|content-length|connection|camel.*|org\.apache\.camel.*)$/i.test(
+        v,
+      ),
+    "Use adapter authentication; do not forward authorization, routing or protocol headers",
+  );
+export const httpReceiver = z
   .object({
     type: z.literal("http").optional(),
     url: httpsUrl,
-    method: z.enum(["GET", "POST", "PUT", "DELETE"]).default("GET"),
+    method: z
+      .enum(["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"])
+      .default("GET"),
     name: receiverName.default("HTTPReceiver"),
+    authentication: z
+      .discriminatedUnion("type", [
+        z.object({ type: z.literal("none") }).strict(),
+        z.object({ type: z.literal("basic"), credentialName: alias }).strict(),
+        z
+          .object({
+            type: z.literal("oauth2ClientCredentials"),
+            credentialName: alias,
+          })
+          .strict(),
+      ])
+      .default({ type: "none" }),
+    timeoutMs: z.number().int().min(1).max(300000).default(60000),
+    requestHeaders: z.array(headerName).max(30).default([]),
+    responseHeaders: z.array(headerName).max(30).default([]),
+    errorHandling: z.enum(["throw", "route"]).default("throw"),
+    responseFormat: z
+      .enum(["xml", "json", "text", "unknown"])
+      .default("unknown"),
+    sendBody: z.boolean().optional(),
+    appendRecordKeyToPath: z.boolean().default(false),
   })
   .strict();
 const receiverSchema = z.union([
@@ -93,6 +126,24 @@ export const nodeSchema = z
     processId: safeId.optional(),
     joinId: safeId.optional(),
     properties: z.record(z.string()).default({}),
+    splitter: z
+      .object({
+        xpath: z.string().min(1).max(1000),
+        businessUnit: z.string().min(1).max(100),
+        recordElement: z.string().regex(/^[A-Za-z_][A-Za-z0-9_.-]*$/),
+        grouping: z.number().int().min(1).max(1000).default(1),
+        parallel: z.boolean().default(false),
+        concurrency: z.number().int().min(1).max(50).default(1),
+        timeoutSeconds: z.number().int().min(1).max(3600).default(300),
+        stopOnException: z.boolean().default(true),
+        streaming: z.boolean().default(true),
+      })
+      .strict()
+      .optional(),
+    gather: z
+      .object({ format: z.enum(["text", "xmlSame"]) })
+      .strict()
+      .optional(),
     x: z.number().finite().nonnegative().optional(),
     y: z.number().finite().nonnegative().optional(),
   })
@@ -112,6 +163,14 @@ const graph = {
   nodes: z.array(nodeSchema).min(2).max(100),
   edges: z.array(edgeSchema).min(1).max(200),
 };
+export const exceptionHandlerSchema = z
+  .object({
+    script: z.string().regex(/^[A-Za-z0-9_.-]+\.groovy$/),
+    name: z.string().default("Handle Exception"),
+    end: z.enum(["message", "error"]).default("message"),
+  })
+  .strict();
+
 export const blueprintSchema = z
   .object({
     id: safeId,
@@ -149,6 +208,15 @@ export const blueprintSchema = z
       ])
       .default({ type: "https" }),
     csrfProtected: z.boolean().default(true),
+    namespaces: z
+      .record(
+        z.string().regex(/^(?!xml$|xmlns$)[A-Za-z_][A-Za-z0-9_]*$/),
+        z
+          .string()
+          .url()
+          .refine((v) => !/[;\s<>"']/.test(v)),
+      )
+      .default({}),
     allowedHeaders: z
       .array(z.string().regex(/^[A-Za-z0-9_-]+$/))
       .default(["SAP_ApplicationID"]),
@@ -160,6 +228,7 @@ export const blueprintSchema = z
             id: safeId,
             name: z.string().min(1),
             ...graph,
+            exceptionHandler: exceptionHandlerSchema.optional(),
           })
           .strict(),
       )
@@ -175,14 +244,7 @@ export const blueprintSchema = z
           .strict(),
       )
       .default([]),
-    exceptionHandler: z
-      .object({
-        script: z.string().regex(/^[A-Za-z0-9_.-]+\.groovy$/),
-        name: z.string().default("Handle Exception"),
-        end: z.enum(["message", "error"]).default("message"),
-      })
-      .strict()
-      .optional(),
+    exceptionHandler: exceptionHandlerSchema.optional(),
   })
   .strict();
 export type Blueprint = z.input<typeof blueprintSchema>;
@@ -190,6 +252,59 @@ export type ParsedBlueprint = z.output<typeof blueprintSchema>;
 
 /** Checks scopes and structured branch convergence before generating any XML. */
 export function validateBlueprintGraph(bp: ParsedBlueprint) {
+  for (const graph of [bp, ...bp.localProcesses])
+    for (const node of graph.nodes) {
+      if (node.splitter) {
+        if (node.type !== "generalSplitter")
+          throw new Error("splitter options require generalSplitter");
+        const s = node.splitter;
+        // SAP validates the dormant thread field as 2..50 even for sequential splitting.
+        const typed = {
+          splitExprValue: s.xpath,
+          exprType: "XPath",
+          grouping: String(s.grouping),
+          ParallelProcessing: String(s.parallel),
+          SplitterThreads: String(s.parallel ? s.concurrency : 2),
+          timeOut: String(s.timeoutSeconds),
+          StopOnExecution: String(s.stopOnException),
+          Streaming: String(s.streaming),
+        };
+        for (const [key, value] of Object.entries(typed)) {
+          if (
+            node.properties[key] !== undefined &&
+            node.properties[key] !== value
+          )
+            throw new Error("Conflicting typed Splitter property: " + key);
+          node.properties[key] = value;
+        }
+        if (!s.parallel && s.concurrency !== 1)
+          throw new Error("Sequential splitter requires concurrency=1");
+        if (s.parallel && s.concurrency < 2)
+          throw new Error("Parallel splitter requires concurrency >= 2");
+      }
+      if (node.gather) {
+        if (node.type !== "gather")
+          throw new Error("gather options require gather step");
+        const typed =
+          node.gather.format === "xmlSame"
+            ? {
+                messageType: "SameXMLFormat",
+                aggregationAlgorithm: "sap-identical-multi-mapping",
+              }
+            : {
+                messageType: "PlainText",
+                aggregationAlgorithm: "concatenate-strategy",
+              };
+        for (const [key, value] of Object.entries(typed)) {
+          if (
+            node.properties[key] !== undefined &&
+            node.properties[key] !== value
+          )
+            throw new Error("Conflicting typed Gather property: " + key);
+          node.properties[key] = value;
+        }
+      }
+    }
   if (
     bp.sender.type === "timer" &&
     (bp.sender.runOnce === true) === !!bp.sender.scheduleKey

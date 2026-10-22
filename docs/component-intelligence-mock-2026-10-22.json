@@ -1,0 +1,342 @@
+{
+  "cases": [
+    {
+      "id": "json-success",
+      "passed": true,
+      "expectedError": null,
+      "actualError": null,
+      "metadata": {
+        "SmartResult": "COMPLETE",
+        "SmartRecordCount": "2",
+        "SmartCase": "json-success"
+      },
+      "httpCalls": 2,
+      "expectedHttpCalls": 2,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "http-401",
+      "passed": true,
+      "expectedError": "SMART_HTTP_FAILURE",
+      "actualError": "SMART_HTTP_FAILURE",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_HTTP_FAILURE",
+        "SmartCase": "http-401"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "http-429",
+      "passed": true,
+      "expectedError": "SMART_HTTP_FAILURE",
+      "actualError": "SMART_HTTP_FAILURE",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_HTTP_FAILURE",
+        "SmartCase": "http-429"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "http-500",
+      "passed": true,
+      "expectedError": "SMART_HTTP_FAILURE",
+      "actualError": "SMART_HTTP_FAILURE",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_HTTP_FAILURE",
+        "SmartCase": "http-500"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "timeout-no-replay",
+      "passed": true,
+      "expectedError": "SMART_HTTP_TIMEOUT",
+      "actualError": "SMART_HTTP_TIMEOUT",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_HTTP_TIMEOUT",
+        "SmartCase": "timeout-no-replay"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "partial-side-effects",
+      "passed": true,
+      "expectedError": "SMART_HTTP_FAILURE",
+      "actualError": "SMART_HTTP_FAILURE",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_HTTP_FAILURE",
+        "SmartCase": "partial-side-effects"
+      },
+      "httpCalls": 2,
+      "expectedHttpCalls": 2,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "business-rejection",
+      "passed": true,
+      "expectedError": "SMART_BUSINESS_RESPONSE",
+      "actualError": "SMART_BUSINESS_RESPONSE",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_BUSINESS_RESPONSE",
+        "SmartCase": "business-rejection"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "missing-business-field",
+      "passed": true,
+      "expectedError": "SMART_BUSINESS_RESPONSE",
+      "actualError": "SMART_BUSINESS_RESPONSE",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_BUSINESS_RESPONSE",
+        "SmartCase": "missing-business-field"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "invalid-json",
+      "passed": true,
+      "expectedError": "SMART_RESPONSE_JSON",
+      "actualError": "SMART_RESPONSE_JSON",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_RESPONSE_JSON",
+        "SmartCase": "invalid-json"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "xml-success",
+      "passed": true,
+      "expectedError": null,
+      "actualError": null,
+      "metadata": {
+        "SmartResult": "COMPLETE",
+        "SmartRecordCount": "2",
+        "SmartCase": "xml-success"
+      },
+      "httpCalls": 2,
+      "expectedHttpCalls": 2,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "xml-business-rejected",
+      "passed": true,
+      "expectedError": "SMART_BUSINESS_RESPONSE",
+      "actualError": "SMART_BUSINESS_RESPONSE",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_BUSINESS_RESPONSE",
+        "SmartCase": "xml-business-rejected"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "text-success",
+      "passed": true,
+      "expectedError": null,
+      "actualError": null,
+      "metadata": {
+        "SmartResult": "COMPLETE",
+        "SmartRecordCount": "2",
+        "SmartCase": "text-success"
+      },
+      "httpCalls": 2,
+      "expectedHttpCalls": 2,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "text-business-rejected",
+      "passed": true,
+      "expectedError": "SMART_BUSINESS_RESPONSE",
+      "actualError": "SMART_BUSINESS_RESPONSE",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_BUSINESS_RESPONSE",
+        "SmartCase": "text-business-rejected"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "invalid-xml",
+      "passed": true,
+      "expectedError": "SMART_RESPONSE_XML",
+      "actualError": "SMART_RESPONSE_XML",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_RESPONSE_XML",
+        "SmartCase": "invalid-xml"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "missing-xml-field",
+      "passed": true,
+      "expectedError": "SMART_BUSINESS_RESPONSE",
+      "actualError": "SMART_BUSINESS_RESPONSE",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_BUSINESS_RESPONSE",
+        "SmartCase": "missing-xml-field"
+      },
+      "httpCalls": 1,
+      "expectedHttpCalls": 1,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "duplicate-input-key",
+      "passed": true,
+      "expectedError": "SMART_RECORD_KEY",
+      "actualError": "SMART_RECORD_KEY",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_RECORD_KEY",
+        "SmartCase": "duplicate-input-key"
+      },
+      "httpCalls": 0,
+      "expectedHttpCalls": 0,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "traversal-input-key",
+      "passed": true,
+      "expectedError": "SMART_RECORD_KEY",
+      "actualError": "SMART_RECORD_KEY",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_RECORD_KEY",
+        "SmartCase": "traversal-input-key"
+      },
+      "httpCalls": 0,
+      "expectedHttpCalls": 0,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "empty-batch",
+      "passed": true,
+      "expectedError": "SMART_RECORD_COUNT",
+      "actualError": "SMART_RECORD_COUNT",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_RECORD_COUNT",
+        "SmartCase": "empty-batch"
+      },
+      "httpCalls": 0,
+      "expectedHttpCalls": 0,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "missing-gather-result",
+      "passed": true,
+      "expectedError": "SMART_INCOMPLETE_BATCH",
+      "actualError": "SMART_INCOMPLETE_BATCH",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_INCOMPLETE_BATCH",
+        "SmartCase": "missing-gather-result"
+      },
+      "httpCalls": 2,
+      "expectedHttpCalls": 2,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "duplicate-gather-key",
+      "passed": true,
+      "expectedError": "SMART_GATHER_RESULT",
+      "actualError": "SMART_GATHER_RESULT",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_GATHER_RESULT",
+        "SmartCase": "duplicate-gather-key"
+      },
+      "httpCalls": 2,
+      "expectedHttpCalls": 2,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    },
+    {
+      "id": "foreign-gather-key",
+      "passed": true,
+      "expectedError": "SMART_GATHER_KEYS",
+      "actualError": "SMART_GATHER_KEYS",
+      "metadata": {
+        "SmartResult": "FAILED",
+        "SmartErrorCode": "SMART_GATHER_KEYS",
+        "SmartCase": "foreign-gather-key"
+      },
+      "httpCalls": 2,
+      "expectedHttpCalls": 2,
+      "noReplay": true,
+      "completeRecords": true,
+      "correlation": true
+    }
+  ],
+  "passed": true,
+  "mockScope": "Loopback HTTP with generated Groovy/XSLT; Splitter/Gather modeled by harness, not CPI"
+}

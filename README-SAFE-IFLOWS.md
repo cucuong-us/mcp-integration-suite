@@ -113,3 +113,7 @@ Kết quả lưu tại `artifacts/runtime-report.json`. Suite dừng sớm khi r
 - https://help.sap.com/docs/integration-suite/isuite-integrations-and-apis/update-and-validate-configuration-parameters
 - https://help.sap.com/docs/integration-suite/sap-integration-suite/get-runtime-status-of-deployed-integration-flow
 - https://help.sap.com/docs/integration-suite/sap-integration-suite/using-ids-to-filter-messages
+
+## Component planning and semantic checks
+
+Use `get-iflow-component-catalog`, `plan-iflow` and `analyze-iflow-blueprint` before preview/create. The catalog covers all 18 supported node types; eight explicit planning goals include guarded Splitter → local worker → API → Gather. HTTP auth aliases, timeout, safe header allowlists and local-process exception handlers are now configurable. See [component intelligence guide](COMPONENT-INTELLIGENCE.md) for contracts, examples, reproducible tests and verification limits.
